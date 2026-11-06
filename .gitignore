@@ -1,0 +1,16 @@
+node_modules/
+data/
+.env
+.env.*
+!.env.example
+artifacts/
+*.log
+backups/
+*.sqlite
+*.sqlite-*
+*.db
+.local/
+.credentials/
+**/ftps.json
+**/mail.json
+**/panel.json

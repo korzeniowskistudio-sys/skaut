@@ -1,0 +1,16 @@
+import { mkdirSync } from 'node:fs';
+import { resolve,dirname } from 'node:path';
+import { createStore } from './store.mjs';
+import { createApp } from './app.mjs';
+import { seedDemo } from './seed.mjs';
+const demoMode=process.env.DEMO_MODE==='1';
+if(demoMode&&process.env.NODE_ENV==='production')throw new Error('Demo mode is forbidden in production.');
+const dbPath=resolve(process.env.DATABASE_PATH||(demoMode?'data/demo.sqlite':'data/skaut.sqlite'));mkdirSync(dirname(dbPath),{recursive:true});
+const store=createStore(dbPath);if(demoMode)await seedDemo(store);
+const prod=process.env.NODE_ENV==='production';if(prod&&!process.env.APP_ORIGIN?.startsWith('https://'))throw new Error('Production requires an HTTPS APP_ORIGIN.');
+const args=process.argv.slice(2);const flag=n=>args[args.indexOf(n)+1];
+const port=Number(process.env.PORT||(args.includes('--port')?flag('--port'):4173));
+const host=process.env.HOST||(args.includes('--host')?flag('--host'):'127.0.0.1');
+const server=createApp({store,demoMode,appOrigin:process.env.APP_ORIGIN||'',secureCookies:prod,trustedProxies:(process.env.TRUSTED_PROXY_IPS||'').split(',').map(x=>x.trim()).filter(Boolean)});
+server.listen(port,host,()=>console.log(`SKAUT running on ${host}:${port} (${demoMode?'demonstration':'live data mode'})`));
+const shutdown=()=>server.close(()=>{store.close();process.exit(0);});process.on('SIGTERM',shutdown);process.on('SIGINT',shutdown);
