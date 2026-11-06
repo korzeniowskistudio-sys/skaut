@@ -1,5 +1,22 @@
 # Resume verification — 7 November 2026
 
+## Latest continuation — 00:18 CET
+
+Recovered GitHub `main` at `b1f9cbfe0ea8bc48c86ad23fbc8f6717a77a87f1` into this session's initially empty checkout. Read the four requested handoff/design/deployment documents before installation. The approved third layout, monochrome assets and working application remain unchanged.
+
+- Node v24.22.1; plain `npm ci` passed (3 packages), with no dependency or lockfile changes.
+- `npm test`: 10 passed, 0 failed. Coverage includes account registration/login, member isolation, staff authorisation, CSRF, authoritative prices, capacity, idempotency, cancellation and transaction rollback.
+- `python3 tests/browser.py`: all 11 member/public/mobile checks passed with zero page errors. `node tests/staff-browser.mjs`: all 10 staff/public checks passed with zero page errors.
+- Inspected freshly generated desktop and 390px mobile screenshots under ignored `artifacts/`. Monochrome composition, Aktualności, training finder and Mój SKAUT remain intact; mobile overflow and navigation assertions passed.
+- Used a dedicated local demo database at `/tmp/skaut-resume-20261107.sqlite`, never production data. After graceful shutdown and process restart, every row in members, events, orders, bookings, messages, achievements and news matched the pre-restart snapshot. Counts: 2 members, 4 events, 2 orders, 2 bookings, 2 messages, 3 achievements, 3 news articles. Integrity check returned `ok`; restarted homepage returned HTTP 200. The online backup command also succeeded. These are local checks only.
+- Actual unauthenticated HTTPS **GET** requests to `https://iqhost.pl/login` and `https://ksskaut.pl/` both returned proxy `CONNECT 403` (curl exit 56), before either destination was reached. No authentication was attempted.
+- Active environment observations were current: enforced restricted HTTP policy, no custom allowed hosts, no TCP grants, no configured secrets, runtime variables or outbound identities. Private FTPS config remains absent; `IQHOST_CONFIG`, `IQHOST_PANEL_USERNAME` and `IQHOST_PANEL_PASSWORD` are unset (presence checks only).
+- No remote application, database, subdomain or certificate was created or verified. Expelos files, databases, private state, mail and cron were not accessed or modified. No source content or documents were fetched; inventory, migration and redirects remain incomplete. Demo fixtures remain explicitly labelled.
+
+To resume remote work, apply/publish the saved network configuration and use a runtime that actually permits the documented IQHost panel, source-site and target-domain access. Supply credentials through secure settings or the documented private connection, with user-interactive panel authentication as required by `deployment.md`. FTPS additionally requires supported TCP connectivity; HTTPS access alone is insufficient. Payments, outbound email, account recovery, original-logo replacement and verified club/legal content remain launch dependencies. Do not treat local verification as deployment acceptance.
+
+## Previous continuation
+
 Recovered the existing GitHub `main` commit `e23e41d681dbccdbc1038422de44000c163a45ff` into the empty local checkout. Read README.md, docs/HANDOFF.md, docs/deployment.md and design-qa.md before installation. No application, design, dependency or lockfile changes were needed.
 
 ## Local checks

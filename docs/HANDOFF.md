@@ -1,6 +1,6 @@
 # SKAUT handoff — 7 November 2026
 
-Latest resumed checks and actual runtime blockers: [verification-2026-11-07.md](verification-2026-11-07.md). Existing implementation recovered from GitHub; local install, all 10 tests, both browser journeys and persistence across restart passed. No remote deployment or content migration occurred. Current runtime still denies IQHost/source-site requests; a network-only configuration draft was saved but is not applied or published.
+Latest resumed checks and actual runtime blockers: [verification-2026-11-07.md](verification-2026-11-07.md#latest-continuation--0018-cet). In the latest continuation, GitHub main at `b1f9cbf` was recovered; plain `npm ci`, all 10 tests, both browser journeys and all domain-row comparisons across a local process restart passed. Approved design and application code are unchanged. No remote deployment or content migration occurred. Actual HTTPS GET requests still return proxy CONNECT 403 before authentication. No IQHost credentials are configured in this runtime; the previously saved network draft has not taken effect here.
 
 ## User request and approved direction
 
