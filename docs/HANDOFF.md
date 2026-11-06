@@ -1,5 +1,7 @@
 # SKAUT handoff — 7 November 2026
 
+Latest resumed checks and actual runtime blockers: [verification-2026-11-07.md](verification-2026-11-07.md). Existing implementation recovered from GitHub; local install, all 10 tests, both browser journeys and persistence across restart passed. No remote deployment or content migration occurred. Current runtime still denies IQHost/source-site requests; a network-only configuration draft was saved but is not applied or published.
+
 ## User request and approved direction
 
 Rebuild https://ksskaut.pl/ with modern, cinematic action-film energy while keeping the SKAUT identity. Preserve all verified existing public content and nested pages, replace decorative graphics, add a dedicated Aktualności section, and implement Mój SKAUT (progress, schedules, messages), event reservations and basket. Target: **skaut.korzeniowski.net** on IQHost.
