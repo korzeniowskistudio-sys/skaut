@@ -39,7 +39,7 @@ export function createPageMotion({ main }) {
       '.hero-photo h1', '.finder > h2', '.finder > p', '.finder > form', '.finder > a',
       '.page-intro > *', '.gallery-intro > *', '.gallery-controls', '.gallery-context',
       '.account-photo > img', '.account-photo h1', '.account-form > h2', '.account-form > p', '.account-form > form',
-      '.article > h1', '.article > .lead', '.article > img', '.image-story > img', '.image-story > .copy',
+      '.article > h1', '.article > .lead', '.article > img', '.image-story > :is(img,.home-photo-frame)', '.image-story > .copy',
       '.section-heading', '.filters', '.filter-tabs', '.panel-heading', '.panel-tabs', '.summary', '.error-page > *',
       '.news-item', '.event-row', '.gallery-photo', '[data-motion]'
     ];
@@ -60,7 +60,7 @@ export function createPageMotion({ main }) {
   }
 
   function enterLayer(element, index, reveal = false) {
-    const photo = element.matches('img,.gallery-photo');
+    const photo = element.matches('img,.gallery-photo,.home-photo-frame');
     const distance = photo ? 44 : 30;
     const frames = photo ? [
       { transform: `translate3d(${distance}px,0,0)`, opacity: .55, clipPath: 'inset(0 0 0 7%)' },
@@ -84,7 +84,7 @@ export function createPageMotion({ main }) {
         enterLayer(entry.target, 0, true);
       }
     }, { threshold: .08, rootMargin: '0px 0px -36px 0px' });
-    const sections = main.querySelectorAll('.section-heading,.image-story > img,.image-story > .copy,.news-preview,.gallery-photo');
+    const sections = main.querySelectorAll('.section-heading,.image-story > :is(img,.home-photo-frame),.image-story > .copy,.news-preview,.gallery-photo');
     let count = 0;
     for (const element of sections) {
       if (entered.some(item => item === element || item.contains(element)) || !eligible(element)) continue;

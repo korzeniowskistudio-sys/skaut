@@ -10,6 +10,7 @@ from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 ORIGIN = os.environ.get('SKAUT_GALLERY_ORIGIN', 'http://127.0.0.1:4173').rstrip('/')
 OUTPUT = ROOT / 'artifacts/gallery'
+LICENCE_IMAGE = '/assets/campaign/licencja-klubowa-badge-1100.webp'
 NEWS_IMAGES = ['02', '03', '04', '05', '07', '08', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
 
@@ -41,12 +42,13 @@ def main():
             page.on('response', lambda response: failed_images.append(response.url) if response.request.resource_type == 'image' and response.status >= 400 else None)
             page.goto(ORIGIN + '/', wait_until='networkidle')
             home = page.locator('main img').evaluate_all('images=>images.map(image=>image.getAttribute("src"))')
-            assert home == ['/assets/hero.webp', supplied['photo-01']['src'], supplied['photo-06']['src']], home
+            assert home == ['/assets/hero.webp', LICENCE_IMAGE, supplied['photo-06']['src']], home
             assert len(set(home)) == 3
-            primary = [supplied['photo-01']['src'], supplied['photo-06']['src']]
-            for selector, identity in [('.news-preview img', 'photo-01'), ('.image-story>img', 'photo-06')]:
+            primary = [LICENCE_IMAGE, supplied['photo-06']['src']]
+            for selector, identity in [('.news-preview img', None), ('.image-story .home-photo-frame>img', 'photo-06')]:
                 state = loaded_image(page, page.locator(selector).first)
-                assert urlsplit(state['currentSrc']).path in {variant['src'] for variant in supplied[identity]['variants']}
+                sources = {variant['src'] for variant in supplied[identity]['variants']} if identity else {LICENCE_IMAGE.replace('1100', str(width)) for width in (360, 720, 1100)}
+                assert urlsplit(state['currentSrc']).path in sources
                 assert state['objectFit'] == 'cover'
 
             page.goto(ORIGIN + '/aktualnosci', wait_until='networkidle')
@@ -86,7 +88,10 @@ def main():
                 primary.append(state['src'])
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'Primary image overflow'
             assert len(set(primary)) == 4
-            assert set(primary + actual_news) == {photo['src'] for photo in supplied.values()}, 'Supplied image missing or repeated'
+            expected_sources = {photo['src'] for photo in supplied.values()}
+            expected_sources.remove(supplied['photo-01']['src'])
+            expected_sources.add(LICENCE_IMAGE)
+            assert set(primary + actual_news) == expected_sources, 'Campaign image missing or repeated'
             assert not errors, errors
             assert not failed_images, failed_images
             result['profiles'].append({'width': width, 'primarySources': primary, 'newsIllustrations': len(actual_news),

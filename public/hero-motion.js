@@ -83,7 +83,7 @@ const fragment = `
  vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 
  vec4 rearLayer(vec2 p) {
-   float shift = 20.0 * uRearSlide;
+   float shift = 7.0 * uRearSlide;
    if (shift < 0.05 || p.x < 985.0 || p.x > 1490.0 || p.y >= 666.0) return vec4(0.0);
    vec4 edges = texture2D(uRearContour, vec2(0.5, (p.y + 0.5) / ${contourHeight}.0));
    float left = dot(edges.rg, vec2(65280.0, 255.0));
@@ -93,9 +93,10 @@ const fragment = `
 
    // Ease the displacement to zero inside the contour. This keeps the original
    // background and the naturally soft photographic edge pixel-aligned.
-   float influence = smoothstep(5.0, 52.0, inset);
+   // Reach the full shift across the head and ear cups, with a narrow edge taper.
+   float influence = smoothstep(5.0, 24.0, inset);
    vec2 rear = p + vec2(shift * influence, 0.0);
-   vec2 grip = influence * uMotion.w * vec2(4.0, 2.5) * weight(rear, vec2(1350.0, 485.0), vec2(139.0, 143.0));
+   vec2 grip = influence * uMotion.w * vec2(2.0, 1.25) * weight(rear, vec2(1350.0, 485.0), vec2(139.0, 143.0));
    vec2 source = rear + grip;
    float alpha = smoothstep(0.03, 0.65, length(source - p));
    vec4 man = vec4(texture2D(uPhoto, source / plate).rgb * alpha, alpha);
@@ -222,6 +223,29 @@ const clamp = n => Math.max(0, Math.min(n, 1));
 const ease = n => { const t = clamp(n); return t * t * (3 - 2 * t); };
 const pulse = (t, start, duration) => Math.sin(Math.PI * clamp((t - start) / duration)) ** 2;
 const blinkAt = (t, start) => ease((t - start) / 75) * (1 - ease((t - start - 103) / 110));
+
+export function mountSupportingPhotoMotion(main) {
+  if (!('IntersectionObserver' in window)) return () => {};
+  const photos = [...main.querySelectorAll('.home-photo-frame')];
+  const visible = new Set();
+  const sync = () => {
+    for (const photo of photos) photo.classList.toggle('photo-in-view', visible.has(photo) && !document.hidden);
+  };
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (entry.intersectionRatio >= 0.2) visible.add(entry.target);
+      else visible.delete(entry.target);
+    }
+    sync();
+  }, {threshold: [0, 0.2]});
+  photos.forEach(photo => observer.observe(photo));
+  document.addEventListener('visibilitychange', sync);
+  return () => {
+    observer.disconnect();
+    document.removeEventListener('visibilitychange', sync);
+    photos.forEach(photo => photo.classList.remove('photo-in-view'));
+  };
+}
 
 /** The photograph is always present. Only brief, visible moments need the GPU. */
 export function mountHeroMotion(image) {
