@@ -57,6 +57,8 @@ test('legacy links redirect to local content and migrated PDF files keep their m
  const dir=mkdtempSync(join(tmpdir(),'skaut-archive-'));
  writeFileSync(join(dir,'index.html'),'SKAUT');
  writeFileSync(join(dir,'statut.pdf'),'%PDF-1.7\narchival document');
+ writeFileSync(join(dir,'photo.jpg'),Buffer.from([255,216,255,217]));
+ writeFileSync(join(dir,'gallery.json'),JSON.stringify({photos:[]}));
  const store=createStore(':memory:');
  const server=createApp({store,publicDir:dir,redirects:{'/zarzad/':'/archiwum/zarzad.html','/?page_id=50':'/archiwum/zarzad.html','/stary-plik.pdf':'/dokumenty/oświadczenie.pdf'}});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -74,6 +76,9 @@ test('legacy links redirect to local content and migrated PDF files keep their m
   assert.equal(pdf.status,200);
   assert.equal(pdf.headers.get('content-type'),'application/pdf');
   assert.equal(await pdf.text(),'%PDF-1.7\narchival document');
+  assert.equal((await fetch(origin+'/photo.jpg')).headers.get('content-type'),'image/jpeg');
+  const manifest=await fetch(origin+'/gallery.json');
+  assert.equal(manifest.status,200);assert.deepEqual(await manifest.json(),{photos:[]});
  }finally{server.closeAllConnections();await new Promise(r=>server.close(r));store.close();rmSync(dir,{recursive:true});}
 });
 

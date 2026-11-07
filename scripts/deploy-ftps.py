@@ -35,6 +35,7 @@ def connect(config):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--only',nargs='+',help='Explicit repository paths or directories to publish from the fixed SKAUT allowlist')
+    parser.add_argument('--workers',type=int,choices=[1,2,4],default=2,help='Parallel verified FTPS transfers')
     args=parser.parse_args()
     if CONFIG.stat().st_mode & 0o077:
         raise RuntimeError('Private FTP configuration must be owner-only.')
@@ -126,7 +127,7 @@ def main():
     results = []
     for batch in [[x for x in public if x[0].name not in ('app.js', 'index.html')],
                   [x for x in public if x[0].name in ('app.js', 'index.html')], runtime]:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
             results.extend(pool.map(publish, batch))
     (BACKUP / 'manifest.json').write_text(json.dumps(results, indent=2))
     print('Verified', len(results), 'explicit SKAUT files. Private code backup:', BACKUP, flush=True)

@@ -6,12 +6,13 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
 root=Path(__file__).resolve().parents[1]
+origin=os.environ.get('SKAUT_TEST_ORIGIN','http://127.0.0.1:4173')
 out=root/'artifacts';out.mkdir(exist_ok=True)
 with sync_playwright() as p:
  browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),args=['--no-sandbox'])
  page=browser.new_page(viewport={'width':1487,'height':1058},device_scale_factor=1)
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
- page.goto('http://127.0.0.1:4173/',wait_until='networkidle')
+ page.goto(origin+'/',wait_until='networkidle')
  expect(page.get_by_role('heading',name='Znajdź swój rytm.')).to_be_visible()
  page.evaluate('document.fonts.ready');page.screenshot(path=str(out/'home-desktop.png'),full_page=True)
  page.screenshot(path=str(out/'home-viewport.png'))
@@ -47,7 +48,7 @@ with sync_playwright() as p:
  page.get_by_role('link',name='Struktura klubu i statut',exact=True).click()
  expect(page.get_by_role('heading',name='Struktura klubu',exact=True)).to_be_visible()
  assert page.locator('a[href^="/dokumenty/"]').count()>=1
- page.goto('http://127.0.0.1:4173/')
+ page.goto(origin+'/')
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200)
  page.screenshot(path=str(out/'home-mobile.png'),full_page=True)
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile overflow'

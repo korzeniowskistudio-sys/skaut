@@ -34,9 +34,10 @@ class CleanHTML(HTMLParser):
     void = {'br', 'hr'}
     blocked = {'script', 'style', 'form', 'object', 'iframe', 'noscript', 'svg'}
 
-    def __init__(self, links):
+    def __init__(self, links, images=None):
         super().__init__(convert_charrefs=True)
         self.links = links
+        self.images = images or {}
         self.output = []
         self.depth = 0
         self.stack = []
@@ -54,6 +55,46 @@ class CleanHTML(HTMLParser):
             return None
         return self.links.get(url, url)
 
+    @staticmethod
+    def dimension(value):
+        value = str(value or '')
+        return int(value) if value.isdigit() and 0 < int(value) <= 100000 else None
+
+    @staticmethod
+    def image_asset(value):
+        # These paths come from the local migration manifest, never source srcset.
+        if not isinstance(value, str) or not value.startswith('/assets/gallery/'):
+            return None
+        url = urllib.parse.urlsplit(value)
+        if url.scheme or url.netloc or url.query or url.fragment or re.search(r'[\s,]', value) or '..' in url.path.split('/'):
+            return None
+        return value
+
+    def image(self, attrs, photo):
+        preview = self.image_asset(photo.get('preview'))
+        if not preview:
+            return False
+        safe = f' src="{html.escape(preview, quote=True)}" alt="{html.escape(attrs.get("alt") or "", quote=True)}" loading="lazy" decoding="async"'
+        if 'title' in attrs:
+            safe += f' title="{html.escape(attrs["title"] or "", quote=True)}"'
+        for name in ('width', 'height'):
+            value = self.dimension(attrs.get(name)) or self.dimension(photo.get(name))
+            if value:
+                safe += f' {name}="{value}"'
+        variants = {}
+        for variant in photo.get('variants', []):
+            if not isinstance(variant, dict):
+                continue
+            source = self.image_asset(variant.get('src'))
+            width = self.dimension(variant.get('width'))
+            if source and width:
+                variants.setdefault(width, source)
+        if variants:
+            srcset = ', '.join(f'{source} {width}w' for width, source in sorted(variants.items()))
+            safe += f' srcset="{html.escape(srcset, quote=True)}" sizes="(max-width: 850px) calc(100vw - 48px), 802px"'
+        self.output.append('<img' + safe + '>')
+        return True
+
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         if tag in self.blocked:
@@ -64,6 +105,10 @@ class CleanHTML(HTMLParser):
         if self.depth:
             return
         if tag == 'img':
+            source = attrs.get('src')
+            photo = self.images.get(canonical(source)) if source else None
+            if photo and self.image(attrs, photo):
+                return
             if href := self.href(attrs.get('src')):
                 label = attrs.get('alt') or 'Fotografia lub materiał z archiwum'
                 self.output.append(f'<span> <a href="{html.escape(href, quote=True)}">{html.escape(label)}</a> </span>')
@@ -74,6 +119,11 @@ class CleanHTML(HTMLParser):
         if tag == 'a':
             if href := self.href(attrs.get('href')):
                 safe = f' href="{html.escape(href, quote=True)}"'
+            if attrs.get('title'):
+                safe += f' title="{html.escape(attrs["title"], quote=True)}"'
+            rel = [token for token in (attrs.get('rel') or '').lower().split() if re.fullmatch(r'[a-z][a-z0-9-]*', token)]
+            if rel:
+                safe += f' rel="{" ".join(dict.fromkeys(rel))}"'
         if tag in ('td', 'th'):
             for attr in ('colspan', 'rowspan'):
                 if attrs.get(attr, '').isdigit() and 0 < int(attrs[attr]) < 100:
@@ -102,8 +152,8 @@ class CleanHTML(HTMLParser):
         return ''.join(self.output) + ''.join('</' + t + '>' for t in reversed(self.stack))
 
 
-def clean(value, links):
-    parser = CleanHTML(links)
+def clean(value, links, images=None):
+    parser = CleanHTML(links, images)
     parser.feed(value)
     return parser.result()
 
@@ -190,7 +240,23 @@ def main():
     links[ORIGIN + '/'] = '/archiwum/index.html'
     for key, target in redirects.items():
         links[canonical(key)] = target
-    shell = (PUBLIC / 'index.html').read_text().replace('<script type="module" src="/app.js"></script>', '<script src="/archive.js" defer></script>\n <link rel="stylesheet" href="/archive.css">')
+    gallery_file=CONTENT/'gallery-source-manifest.json'
+    images={}
+    if gallery_file.exists():
+        gallery=json.loads(gallery_file.read_text())
+        photos={str(photo['id']):photo for photo in gallery['photos']}
+        for url,identity in gallery['sourceAliases'].items():
+            if photo := photos.get(str(identity)):
+                links[canonical(url)]=photo['original']
+                images[canonical(url)]=photo
+        for album in gallery.get('albums',[]):
+            if album.get('externalSource'):
+                url=album['externalSource'];target='/galeria?album='+album['id']
+                links[canonical(url)]=target
+                links[canonical(url+'?usp=sharing')]=target
+        redirects['/galeria-zdjec-z-naszych-imprez/']='/galeria'
+        redirects['/?page_id=5577']='/galeria'
+    shell = re.sub(r'<script type="module" src="/app\.js(?:\?[^"]*)?"></script>', '<script type="module" src="/archive-motion.js?v=20261107-albums-calendar"></script>\n <link rel="stylesheet" href="/archive.css?v=20261107-responsive">', (PUBLIC / 'index.html').read_text())
     shell = shell.replace('<a href="/informacje">Informacje o projekcie</a>', '<a href="/klub">Dokumenty i informacje klubu</a>')
     (PUBLIC / 'archiwum').mkdir(exist_ok=True)
     CONTENT.mkdir(exist_ok=True)
@@ -207,7 +273,9 @@ def main():
     category_names = {row['id']: plain(row['name']) for row in categories}
     for item in pages + posts + events:
         target = links[canonical(item['link'])]
-        body = clean(item['content']['rendered'], links)
+        body = clean(item['content']['rendered'], links, images)
+        if item['id']==5577 and gallery_file.exists():
+            body='<p><a class="btn" href="/galeria">Otwórz pełną galerię zdjęć</a></p>'+body
         title = plain(item['title']['rendered'])
         if item['slug'] == 'kontakt':
             body += '<p>W sprawach klubowych: <a href="mailto:zarzad@ksskaut.pl">zarzad@ksskaut.pl</a>. Formularz ze starego serwisu nie jest tu aktywny.</p>'
@@ -234,7 +302,7 @@ def main():
                 'sourcePages': [{'id': p['id'], 'url': p['link'], 'path': links[canonical(p['link'])], 'title': plain(p['title']['rendered'])} for p in pages + posts + events],
                 'limitations': ['Current source calendar returned zero upcoming events; historical events are archived, not bookable. No capacity or prices were invented.',
                                 'External documents and unavailable source files retain original links.',
-                                'Decorative images were replaced; historical gallery photos remain linked to the source.',
+                                ('All available original images are self-hosted with galleries and source metadata.' if gallery_file.exists() else 'Decorative images were replaced; historical gallery photos remain linked to the source.'),
                                 'The original ksskaut.pl server is unchanged; redirects apply on the new domain.']}
     (CONTENT / 'source-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
     print('Generated', len(news), 'news articles,', len(pages), 'pages;', sum(r['status'] == 'saved' for r in document_rows), '/', len(document_rows), 'documents saved', flush=True)

@@ -1,6 +1,7 @@
 .archive h2{font-size:clamp(32px,5vw,44px);margin:1.2em 0 .5em}
 .archive h3{font-size:30px;margin:1em 0 .4em}
 .archive-content{overflow-wrap:anywhere;line-height:1.8}
+.archive-content img{height:auto}
 .archive-content ul,.archive-content ol{padding-left:1.5em;margin:1em 0}
 .archive-content li{margin:.6em 0}
 .archive-content table{display:block;overflow-x:auto;max-width:100%;border-collapse:collapse;font-size:14px;margin:24px 0}

@@ -4539,7 +4539,7 @@
   "limitations": [
     "Current source calendar returned zero upcoming events; historical events are archived, not bookable. No capacity or prices were invented.",
     "External documents and unavailable source files retain original links.",
-    "Decorative images were replaced; historical gallery photos remain linked to the source.",
+    "All available original images are self-hosted with galleries and source metadata.",
     "The original ksskaut.pl server is unchanged; redirects apply on the new domain."
   ]
 }

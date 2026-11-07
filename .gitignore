@@ -13,6 +13,8 @@ backups/
 # Rehydrated from the public source and verified against content/source-manifest.json.
 # Keep 526 MB of downloadable originals out of normal source-code clones.
 public/dokumenty/
+public/assets/gallery/
+__pycache__/
 .credentials/
 **/ftps.json
 **/mail.json

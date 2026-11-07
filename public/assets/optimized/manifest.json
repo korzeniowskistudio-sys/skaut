@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "photos": [
+    {
+      "source": "/assets/hero.webp",
+      "sourceSha256": "b98466546d28dd81d9b0316b0ee25caa356021ce6add92b7cfffb0d9445263a9",
+      "originalBytes": 183386,
+      "variants": [
+        {
+          "src": "/assets/optimized/hero-360.webp",
+          "width": 360,
+          "height": 203,
+          "bytes": 7124
+        },
+        {
+          "src": "/assets/optimized/hero-720.webp",
+          "width": 720,
+          "height": 405,
+          "bytes": 17760
+        },
+        {
+          "src": "/assets/optimized/hero-1100.webp",
+          "width": 1100,
+          "height": 619,
+          "bytes": 34084
+        }
+      ]
+    },
+    {
+      "source": "/assets/range-front.webp",
+      "sourceSha256": "5600e49f6129698dcccc84c43d282d1d6c22fbb5e6afc035b4b61a56a407b856",
+      "originalBytes": 153680,
+      "variants": [
+        {
+          "src": "/assets/optimized/range-front-360.webp",
+          "width": 360,
+          "height": 203,
+          "bytes": 6432
+        },
+        {
+          "src": "/assets/optimized/range-front-720.webp",
+          "width": 720,
+          "height": 405,
+          "bytes": 16956
+        },
+        {
+          "src": "/assets/optimized/range-front-1100.webp",
+          "width": 1100,
+          "height": 619,
+          "bytes": 33526
+        }
+      ]
+    },
+    {
+      "source": "/assets/range-side.webp",
+      "sourceSha256": "10525936c47a9e78942bab993c27aec02b2172f6ebde9822f61775bef42a43b3",
+      "originalBytes": 158574,
+      "variants": [
+        {
+          "src": "/assets/optimized/range-side-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 8430
+        },
+        {
+          "src": "/assets/optimized/range-side-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 21220
+        },
+        {
+          "src": "/assets/optimized/range-side-1100.webp",
+          "width": 1100,
+          "height": 617,
+          "bytes": 40098
+        }
+      ]
+    }
+  ],
+  "crest": [
+    {
+      "src": "/assets/optimized/skaut-logo-144.png",
+      "width": 144,
+      "height": 144,
+      "bytes": 29484
+    },
+    {
+      "src": "/assets/optimized/skaut-icon-64.png",
+      "width": 64,
+      "height": 64,
+      "bytes": 8958
+    }
+  ],
+  "crestOriginalBytes": 223374,
+  "crestSourceSha256": "46c1e566090c6f75c2219949c912991b845a29c1696be72149c2cde1bc5fa549"
+}

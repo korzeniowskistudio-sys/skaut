@@ -1,0 +1,12 @@
+/* The page is fully visible at rest. Motion is owned and cancelled by motion.js. */
+.header .sound-toggle{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;color:inherit;background:transparent;border:1px solid transparent}
+.header .sound-toggle i{font-size:23px}
+.header .sound-toggle:hover{background:var(--blue)}
+.header .sound-toggle[aria-pressed=true]{border-color:#a9bdd5}
+.header .sound-toggle:focus-visible{outline:3px solid white;outline-offset:3px}
+.header .sound-toggle:active i{transform:translateY(1px)}
+/* Replaces the incumbent hero drift with the single authored page sequence. */
+#main .hero-photo>img{animation:none}
+@media(max-width:780px){.header nav .sound-toggle{margin-top:8px;align-self:flex-start}}
+@media(prefers-reduced-motion:reduce){.header .sound-toggle:active i{transform:none}}
+@media(forced-colors:active){.header .sound-toggle{color:ButtonText}.header .sound-toggle[aria-pressed=true]{border-color:Highlight}.header .sound-toggle:focus-visible{outline-color:Highlight}}

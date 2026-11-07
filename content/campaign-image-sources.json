@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "source": "User-provided generated campaign images",
+    "documentary": false,
+    "description": "Materiały kampanijne wygenerowane i dostarczone przez użytkownika; nie dokumentują rzeczywistych członków, obiektów ani wydarzeń KS SKAUT.",
+    "imported": "2026-11-07"
+  },
+  "photos": [
+    {
+      "id": "photo-01",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_a608b235-415e-484e-a8f0-0d4e36986938_2.png",
+      "sourceSha256": "1bfacda148c56c4ccccf1d4df9956479b889196aa84aa60a9a0739cf1df9141c",
+      "sourceBytes": 1840229,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-01-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-01-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 8494,
+          "sha256": "beea58663fec51400e0be830798d8ca123ae8b7decb255d2a69081d1fccd79a2"
+        },
+        {
+          "src": "/assets/campaign/photo-01-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 26152,
+          "sha256": "11eddec9fb7b03109055a5d0a72b2fff8c6037abec57d2536c051d41cb68cf7a"
+        },
+        {
+          "src": "/assets/campaign/photo-01-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 54266,
+          "sha256": "0b04c8f6313585dafe3ab7b3717ab783bb1a95894cd910c2a3b5a52330a1418c"
+        }
+      ]
+    },
+    {
+      "id": "photo-02",
+      "sourceBasename": "u9515185689_close_up_on_pistol_hold_by_attractive_female_shoo_fe176399-a482-4c8f-b505-a4edcb1aeb56_1.png",
+      "sourceSha256": "5cadf9408c8f7f3032779ce352526dabb52c93486a6b297b85158394d785a31f",
+      "sourceBytes": 2089937,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Pistolet w dłoniach zawodniczki — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-02-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-02-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 10994,
+          "sha256": "87176df9e969848e957e020803a947a0fbf950fda9f4ef82981c0ba3da6a5037"
+        },
+        {
+          "src": "/assets/campaign/photo-02-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 34522,
+          "sha256": "7ce5dc6026b46e2007e5f1723ff0a8dd832761facc685138b22f369ff7e37df2"
+        },
+        {
+          "src": "/assets/campaign/photo-02-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 80618,
+          "sha256": "bf683632d2f8c93dc7805bff8dec1c1f2407d3b677ad5b8cf81e7571a5b37d00"
+        }
+      ]
+    },
+    {
+      "id": "photo-03",
+      "sourceBasename": "u9515185689_close_up_on_pistol_hold_by_attractive_female_shoo_84c2441d-57b9-4a4f-8e4e-66c3b4d738e7_2.png",
+      "sourceSha256": "e69151d747031af8dbaba57388f5bb20028a0d67fcfcdee952bfb472d6baedf5",
+      "sourceBytes": 1572084,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Pistolet w dłoniach zawodniczki — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-03-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-03-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 5012,
+          "sha256": "66a7dd5e3c04555d676dacdbd52e393aac3c72e14576400326a24cb592c19ff7"
+        },
+        {
+          "src": "/assets/campaign/photo-03-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 12606,
+          "sha256": "876bccce72050a7defb08bdfb61b0639494d0091f17b7986278e1423cd792e64"
+        },
+        {
+          "src": "/assets/campaign/photo-03-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 28058,
+          "sha256": "f307b1c03518a62d37264015444c3f1240639151e260979c365e2fdb00644d10"
+        }
+      ]
+    },
+    {
+      "id": "photo-04",
+      "sourceBasename": "u9515185689_close_up_on_pistol_hold_by_attractive_female_shoo_84c2441d-57b9-4a4f-8e4e-66c3b4d738e7_0.png",
+      "sourceSha256": "8a535eccc1e48027477c747df019f38d0b93c83c49c90877ec341cc35a52a8ab",
+      "sourceBytes": 1753188,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Pistolet w dłoniach zawodniczki — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-04-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-04-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 4748,
+          "sha256": "441c7d9f21eb35413639d28dd72f29f4900c69b0dd4ee9016d8ee2b53f74fb44"
+        },
+        {
+          "src": "/assets/campaign/photo-04-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 12286,
+          "sha256": "baead65002a55bc51188d5229d7f4fb24b44aaa59d7f98bbdbe175c2d5daec1e"
+        },
+        {
+          "src": "/assets/campaign/photo-04-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 27318,
+          "sha256": "a1a5c2eb3886de5347541a50c177dbb5cc36a8816c0fd8df40cc082a287b03b2"
+        }
+      ]
+    },
+    {
+      "id": "photo-05",
+      "sourceBasename": "u9515185689_close_up_on_pistol_hold_by_attractive_female_shoo_cf7a1fdb-e04b-4c96-b38b-e8618ca0e327_1.png",
+      "sourceSha256": "c5811816ff6e35037b3936e98e84143227d5dcf8212bcf6c556d5b141cb0d6d4",
+      "sourceBytes": 1575423,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Pistolet w dłoniach zawodniczki — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-05-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-05-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 5870,
+          "sha256": "d298bcabfd96ffbb62743203e26277655afdba2218d662aa19c1a46d3f17cdf6"
+        },
+        {
+          "src": "/assets/campaign/photo-05-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 15726,
+          "sha256": "78a5e25f8981b9f21854f4809e87d235368db39ed6f987b0704242ae8cd8690a"
+        },
+        {
+          "src": "/assets/campaign/photo-05-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 29804,
+          "sha256": "3c86b91d632d0d9693b72d985c7d848692624b424b03e2e35aeabaf0bfdbf108"
+        }
+      ]
+    },
+    {
+      "id": "photo-06",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_843981ac-f981-4df8-8db4-1de4bd98654d_3.png",
+      "sourceSha256": "b92bb67957dbf1f7b98e2e5bbcf1dbe0cf93c460f2f2e21c08cf73b251865624",
+      "sourceBytes": 1717639,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-06-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-06-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 7020,
+          "sha256": "fec4d7b5aae5db59d249eecaf3d09c9c4f7b442ffc2a918417983282b18d0203"
+        },
+        {
+          "src": "/assets/campaign/photo-06-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 18832,
+          "sha256": "bf93f1559974207693026bee42720e69d5b1d0d46fc4843970ef5d78305b2143"
+        },
+        {
+          "src": "/assets/campaign/photo-06-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 40514,
+          "sha256": "1f25aa0aa524ae041451651039f9a6cbe6fb39da3c86cb617ea808495aa35a40"
+        }
+      ]
+    },
+    {
+      "id": "photo-07",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_8d930618-f16a-4642-9577-e0641f777e1d_0.png",
+      "sourceSha256": "f8cb1a266138653e456135e88fc5030c171cd4234b8ece87902deed461a5a3f8",
+      "sourceBytes": 1621647,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-07-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-07-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 6434,
+          "sha256": "699ba57a42da871ffd06ec52374b883d8d3b4d6247de8b8998f746511a5ff383"
+        },
+        {
+          "src": "/assets/campaign/photo-07-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 15430,
+          "sha256": "5ecfc4e8ec29206355adf9bd401713d14da68f2610be4509a61a368317b58301"
+        },
+        {
+          "src": "/assets/campaign/photo-07-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 29136,
+          "sha256": "b7ec0dc5df13ce8763e0d5338445430d68d73e683fb2d829eec006ae210a7513"
+        }
+      ]
+    },
+    {
+      "id": "photo-08",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_56432bd0-6e25-4abd-88ff-99943ccc3432_2.png",
+      "sourceSha256": "5696e856b16679a2c013893eb9a450dfae502825fb3a60c2d461d9b33b1d5030",
+      "sourceBytes": 1728948,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-08-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-08-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 6378,
+          "sha256": "b542893d0c19174f08c587fdc8126d4d14c63ea8e1f529b61c83aa3c67d4877b"
+        },
+        {
+          "src": "/assets/campaign/photo-08-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 18202,
+          "sha256": "5993f7e172935e000d3eba2393f7e3d0a3fc11ab12061abd8111ba65cfd2fcf2"
+        },
+        {
+          "src": "/assets/campaign/photo-08-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 35482,
+          "sha256": "c0aca250b5b75ce91cc5a2fc1be4b76077ae455c4e29326689a5041fd0ea62e1"
+        }
+      ]
+    },
+    {
+      "id": "photo-09",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_8d930618-f16a-4642-9577-e0641f777e1d_3.png",
+      "sourceSha256": "77665ca26c42bed1a9ff0bbb08f6cfd22a1494bbab2cadb718af666b853aecd5",
+      "sourceBytes": 1906015,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-09-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-09-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 6720,
+          "sha256": "0d2660f2aef61b016a11e22d5f0fa643bbe5f3806a4ea9029862e2bb4ba7a244"
+        },
+        {
+          "src": "/assets/campaign/photo-09-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 17164,
+          "sha256": "2eac0e3c4cd0ef28552bd83bf123ccea76e58d873bbd5755d757593c7eb19e23"
+        },
+        {
+          "src": "/assets/campaign/photo-09-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 35930,
+          "sha256": "cec1b484c395965d4c9e09725ebb28a1f83e5974b0da78cb840e8d2a8ca24d0b"
+        }
+      ]
+    },
+    {
+      "id": "photo-10",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_03304f4d-4f7a-4383-bca6-46fa208a6b61_3.png",
+      "sourceSha256": "0acd18be6e89cfe77282b51843238f6466edd94ee748746edea8c1d0177ee781",
+      "sourceBytes": 2209775,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-10-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-10-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 6376,
+          "sha256": "9561469ac71b284a7cf8e9570dbb6359efa083eb58b23deedc966b4454db9b3a"
+        },
+        {
+          "src": "/assets/campaign/photo-10-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 19354,
+          "sha256": "063eb6a5d960135c308b960ff8779e731474d0ea75ed4ee71322fbc48b9c1ddc"
+        },
+        {
+          "src": "/assets/campaign/photo-10-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 62114,
+          "sha256": "9aa06b17e2a5d2ff7af18dc42262dc9837ffd8e63ec3798834e13673ddf5d4bb"
+        }
+      ]
+    },
+    {
+      "id": "photo-11",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_06fe2e86-b49f-4d5d-bf07-29ea54e146cd_0.png",
+      "sourceSha256": "2bb8188863e195e449ef68b1c51d52e8b76c01441b1e289fa0ca373f459c87c8",
+      "sourceBytes": 1842223,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-11-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-11-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 7064,
+          "sha256": "adc90b2e034b149d5d756f5fb035f366f741802f22a28a213aa9fb95fb499fb6"
+        },
+        {
+          "src": "/assets/campaign/photo-11-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 21082,
+          "sha256": "f2f96b4fae86c766bdf948d8aef6684c1c2018a1bd02698a50bee795847a7337"
+        },
+        {
+          "src": "/assets/campaign/photo-11-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 48576,
+          "sha256": "efef4c3c1f427078068936b1be83ca1704f2520cac0e944ef0b93e233bd2d508"
+        }
+      ]
+    },
+    {
+      "id": "photo-12",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_75957831-de2b-405a-8da1-9324ecafbc15_2.png",
+      "sourceSha256": "8ca3caea56c38049c73ca9262d47f4e063ef5e8f0c1bf8b404222e1fb2e690c7",
+      "sourceBytes": 1971108,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-12-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-12-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 7340,
+          "sha256": "4b6987c70dabc2aa8818fbad876ef6525344887d24beb447b3a32fdb8aa79e03"
+        },
+        {
+          "src": "/assets/campaign/photo-12-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 20066,
+          "sha256": "ce47d4d3cc0cfe27f37184ca747f5de905045092e3f9420141f954e84dd8f235"
+        },
+        {
+          "src": "/assets/campaign/photo-12-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 53600,
+          "sha256": "3e780f6738cfa27dcb0d57053bc8adb94527a0412c7080be365900e22337f45f"
+        }
+      ]
+    },
+    {
+      "id": "photo-13",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_507f4e57-e5d7-4847-a3ba-19f9478dc63f_3.png",
+      "sourceSha256": "b808eca8b8ee1738729316ca59becfc5ba4ced0d47880ead15fcfeb40338eb46",
+      "sourceBytes": 1797780,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-13-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-13-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 8650,
+          "sha256": "2da953f9c512d1efb76273ebcdc6289e6edb8f38f1b5b725f53b6c1c4bfda07a"
+        },
+        {
+          "src": "/assets/campaign/photo-13-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 22394,
+          "sha256": "f0245d9a23172dfc034e25fa7aef471ee7f342bda9ff0606fb9c1e14e00f749f"
+        },
+        {
+          "src": "/assets/campaign/photo-13-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 41004,
+          "sha256": "a286a09ac21a07936de4feb1fb6c57a3a3843821ffd3a792982db1bb50b7d950"
+        }
+      ]
+    },
+    {
+      "id": "photo-14",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_e1887f1e-5b99-46a3-97cd-4d70fde7f5d7_2.png",
+      "sourceSha256": "ef3561076bd9857c88a359837b8b792598ad0feb51105c051d28b7bbeb887184",
+      "sourceBytes": 1914948,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-14-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-14-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 7184,
+          "sha256": "9df33738bd4f045938bafd693c41d08c9fcc234dde57214ca3bf9f98a61af1f6"
+        },
+        {
+          "src": "/assets/campaign/photo-14-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 18078,
+          "sha256": "dc2b30243679adbb0738862ccb07bd4f06fb418f0c1d64dc4062ee8daa57a737"
+        },
+        {
+          "src": "/assets/campaign/photo-14-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 43476,
+          "sha256": "d7b23413965f6471ca5ab007c9d15714d3393008226398afe8956fc90cfaad86"
+        }
+      ]
+    },
+    {
+      "id": "photo-15",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_3a2cbfe5-bd05-4b9e-bf51-bb686ee0b0d5_3.png",
+      "sourceSha256": "a24804123a1ca47cf186dcb1256b23ccc84094cb2aece59d635f581673730bef",
+      "sourceBytes": 1849874,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-15-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-15-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 8872,
+          "sha256": "77fe1ea33786218e629bab2eb0b8a3716cd6f9651603ebfa2196f3ece5132080"
+        },
+        {
+          "src": "/assets/campaign/photo-15-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 22618,
+          "sha256": "346f6df74807dbf711efd4bf675a714fc889ad578689344384f053fdf3b3d7b3"
+        },
+        {
+          "src": "/assets/campaign/photo-15-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 43244,
+          "sha256": "d7920c80ccdb79a03eb4a84b9b2cdf691ecb50baf1697ea7bc725bef9e59da3c"
+        }
+      ]
+    },
+    {
+      "id": "photo-16",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_3a2cbfe5-bd05-4b9e-bf51-bb686ee0b0d5_0.png",
+      "sourceSha256": "e8bf776d6d24aa210a240fb906a83c28874fe97fbf44c8286f866a8082e90e4f",
+      "sourceBytes": 1636357,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-16-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-16-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 8578,
+          "sha256": "15ffa4c1632e45d2d894dcb7e3becb9db4132a6de35a52498839b5c42fb4b283"
+        },
+        {
+          "src": "/assets/campaign/photo-16-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 20390,
+          "sha256": "efd4a8a01897aafe7ba3ba57bd5b84c785b3b83be8d318b1807c109d917b9734"
+        },
+        {
+          "src": "/assets/campaign/photo-16-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 34636,
+          "sha256": "e6ca86b2ce606e75eb540fde57e6c7a0b8b23e472a8d0efd9afb5b76598edc41"
+        }
+      ]
+    },
+    {
+      "id": "photo-17",
+      "sourceBasename": "u9515185689_Attractive_woman_running_holding_Arms_Alien_compe_4f25a387-17ec-4e05-973c-c3ef27792911_1.png",
+      "sourceSha256": "50c7a1cdf209aa817aa89ec3088519c8686741ac7f8e21ff098a6c9d48dca86f",
+      "sourceBytes": 2127076,
+      "sourceWidth": 1200,
+      "sourceHeight": 992,
+      "alt": "Dynamiczna scena treningu sportowego z zawodniczką — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-17-1100.webp",
+      "width": 1100,
+      "height": 909,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-17-360.webp",
+          "width": 360,
+          "height": 298,
+          "bytes": 9678,
+          "sha256": "633974844ff05c92f9470f79c4b33216aed04a6f8e19eddb33877cc852ba5f02"
+        },
+        {
+          "src": "/assets/campaign/photo-17-720.webp",
+          "width": 720,
+          "height": 595,
+          "bytes": 27544,
+          "sha256": "aab8a6813fb39757ac29cebe9f6cb04b1927aace651db5d4788913678c3dfca3"
+        },
+        {
+          "src": "/assets/campaign/photo-17-1100.webp",
+          "width": 1100,
+          "height": 909,
+          "bytes": 77838,
+          "sha256": "529930f3728f87b04dc5e3c0977250bc397116793a290a67197812025e127133"
+        }
+      ]
+    },
+    {
+      "id": "photo-18",
+      "sourceBasename": "u9515185689_An_adult_female_and_male_shooting-sport_couple_in_2f29f6b0-4772-499a-95af-03f4f370c15a_2.png",
+      "sourceSha256": "7d232f4d8135e0435bf4ec31c0a3c2c795cb0617d2d4529a2d5f3f84f000c1af",
+      "sourceBytes": 1871689,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas treningu strzeleckiego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-18-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-18-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 3404,
+          "sha256": "28fad90966af9cb249e5b2fd13fbf6ccce760a4626a01350a5927f83133e00bf"
+        },
+        {
+          "src": "/assets/campaign/photo-18-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 9362,
+          "sha256": "4c2d85e11c7e37b2a2e2fb97ed18f8066d7e11d1211b5a96ae3e4e26381551c4"
+        },
+        {
+          "src": "/assets/campaign/photo-18-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 27400,
+          "sha256": "d8a5086ff57923e70cd34eeaa8522ffd5bb5441ebae8844d05d4233c39dc57ae"
+        }
+      ]
+    },
+    {
+      "id": "photo-19",
+      "sourceBasename": "u9515185689_young_female_and_male_shooting-sport_couple_runni_8d7d7031-741c-47e5-a2bc-5ffc42ced360_3.png",
+      "sourceSha256": "2923f921c64c30a8841cb67ca7b06f4e9b8cf82cab8eb762d2bcebc8c29d4ba0",
+      "sourceBytes": 1896611,
+      "sourceWidth": 1456,
+      "sourceHeight": 816,
+      "alt": "Zawodniczka i zawodnik podczas dynamicznego treningu sportowego — fotografia kampanijna.",
+      "src": "/assets/campaign/photo-19-1100.webp",
+      "width": 1100,
+      "height": 616,
+      "variants": [
+        {
+          "src": "/assets/campaign/photo-19-360.webp",
+          "width": 360,
+          "height": 202,
+          "bytes": 3764,
+          "sha256": "eadaa8e82055f04bf50fe35af7cb8aa975aa262bb1676d9eb343b63c3a220c32"
+        },
+        {
+          "src": "/assets/campaign/photo-19-720.webp",
+          "width": 720,
+          "height": 404,
+          "bytes": 8978,
+          "sha256": "dc596d0c27d464c21cbd2f907ca89b11ebfbe514a84df6298a71f18d52127e24"
+        },
+        {
+          "src": "/assets/campaign/photo-19-1100.webp",
+          "width": 1100,
+          "height": 616,
+          "bytes": 20084,
+          "sha256": "9030d4433b12e5ec79617fe4f0a15fedb62f147c234afb4f8afc6360bbda12a5"
+        }
+      ]
+    }
+  ],
+  "encoding": {
+    "format": "WebP",
+    "quality": 78,
+    "method": 6,
+    "widths": [
+      360,
+      720,
+      1100
+    ],
+    "crop": false,
+    "upscale": false,
+    "preserveAspectRatio": true
+  },
+  "totals": {
+    "sourceBytes": 34922551,
+    "derivativeBytes": 1306464,
+    "largestVariantBytes": 813098,
+    "photos": 19,
+    "derivatives": 57
+  }
+}
