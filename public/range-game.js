@@ -1,6 +1,8 @@
+import {t, tr} from './i18n.js?v=20261107-english';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
 
 const ASSETS = '/assets/range-game/';
+const RECORD_KEY = 'skaut-range-high-score';
 const STAGE_SECONDS = 30;
 const STAGE_NOTICE_SECONDS = 1;
 const STAGES = [
@@ -16,25 +18,28 @@ export function rangeGameMarkup() {
   return `<section class="range-game" data-range-game data-phase="intro" aria-labelledby="range-game-title">
     <img class="range-art" src="${ASSETS}poster.webp" alt="" width="1120" height="480" fetchpriority="high">
     <img class="range-art range-art--arena" src="${ASSETS}arena.webp" data-range-arena alt="" hidden>
-    <canvas class="range-canvas" aria-label="Plansza gry w ruchome tarcze" aria-describedby="range-game-controls" tabindex="-1" hidden></canvas>
+    <canvas class="range-canvas" aria-label="${t("Plansza gry w ruchome tarcze")}" aria-describedby="range-game-controls" tabindex="-1" hidden></canvas>
     <p class="range-stage-notice" data-range-stage-notice hidden></p>
     <div class="range-hud">
-      <p class="range-hud-label">SKAUT <span>·</span> Strefa gry</p>
+      <p class="range-hud-label">SKAUT <span>·</span> ${t("Strefa gry")}</p>
       <div class="range-readouts" data-range-readouts hidden>
-        <div class="range-stat" role="status"><span>Etap</span><strong data-range-stage>1 / ${STAGES.length}</strong></div>
-        <div class="range-stat"><span>Czas</span><strong data-range-time>30 s</strong></div>
-        <div class="range-stat range-stat--score" role="status"><span>Wynik</span><strong data-range-score>0000</strong></div>
+        <div class="range-stat" role="status"><span>${t("Etap")}</span><strong data-range-stage>1 / ${STAGES.length}</strong></div>
+        <div class="range-stat"><span>${t("Czas")}</span><strong data-range-time>30 s</strong></div>
+        <div class="range-stat range-stat--score" role="status">
+          <span>${t("Wynik")}</span><strong data-range-score>0000</strong>
+          <small class="range-record">${t("Rekord")} <b data-range-high-score>0000</b></small>
+        </div>
       </div>
     </div>
     <div class="range-overlay" data-range-overlay>
-      <h2 id="range-game-title">Ruchome tarcze.</h2>
-      <p data-range-message>Masz ${STAGE_SECONDS} sekund na etap. Etap 2 zaczyna się przy ${STAGES[1].points} pkt, a etap 3 przy ${STAGES[2].points} pkt. Celuj myszą i kliknij albo dotknij tarczy.</p>
-      <button type="button" class="btn light range-play" data-range-play hidden>Graj</button>
-      <button type="button" class="range-utility" data-range-skip>Pomiń intro</button>
+      <h2 id="range-game-title">${t("Ruchome tarcze.")}</h2>
+      <p data-range-message>${t("Masz")} ${STAGE_SECONDS} ${t("sekund na etap. Etap 2 zaczyna się przy")} ${STAGES[1].points} ${t("pkt, a etap 3 przy")} ${STAGES[2].points} ${t("pkt. Celuj myszą i kliknij albo dotknij tarczy.")}</p>
+      <button type="button" class="btn light range-play" data-range-play hidden>${t("Graj")}</button>
+      <button type="button" class="range-utility" data-range-skip>${t("Pomiń intro")}</button>
     </div>
-    <button type="button" class="range-utility range-pause" data-range-pause hidden>Pauza</button>
-    <button type="button" class="range-utility range-sound" data-range-sound aria-label="Dźwięk gry" aria-pressed="true" hidden>Dźwięk: wł.</button>
-    <p class="range-sr" id="range-game-controls">Celuj myszą i kliknij, by strzelić. Na ekranie dotykowym dotknij tarczy. Użyj strzałek, aby celować z klawiatury. Spacja oddaje strzał, a Escape wstrzymuje rundę.</p>
+    <button type="button" class="range-utility range-pause" data-range-pause hidden>${t("Pauza")}</button>
+    <button type="button" class="range-utility range-sound" data-range-sound aria-label="${t("Dźwięk gry")}" aria-pressed="true" hidden>${t("Dźwięk: wł.")}</button>
+    <p class="range-sr" id="range-game-controls">${t("Celuj myszą i kliknij, by strzelić. Na ekranie dotykowym dotknij tarczy. Użyj strzałek, aby celować z klawiatury. Spacja oddaje strzał, a Escape wstrzymuje rundę.")}</p>
   </section>`;
 }
 
@@ -89,6 +94,7 @@ export function mountRangeGame(root) {
   const stageNotice = root.querySelector('[data-range-stage-notice]');
   const stageValue = root.querySelector('[data-range-stage]');
   const scoreValue = root.querySelector('[data-range-score]');
+  const recordValue = root.querySelector('[data-range-high-score]');
   const timeValue = root.querySelector('[data-range-time]');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const controller = new AbortController();
@@ -109,6 +115,12 @@ export function mountRangeGame(root) {
   let nextTarget = 0;
   let lastShot = -1;
   let score = 0;
+  let record = 0;
+  try {
+    const saved = Number(localStorage.getItem(RECORD_KEY));
+    if (Number.isSafeInteger(saved) && saved > 0) record = saved;
+  } catch {}
+  recordValue.textContent = String(record).padStart(4, '0');
   let shots = 0;
   let hits = 0;
   let targets = [];
@@ -145,7 +157,7 @@ export function mountRangeGame(root) {
     if (skipIntro) intro.hidden = true;
     loadArt();
     setPhase('ready');
-    if (!context) message.textContent = 'Gra wymaga obsługi grafiki Canvas.';
+    if (!context) message.textContent = t('Gra wymaga obsługi grafiki Canvas.');
     else if (skipHadFocus) play.focus({preventScroll: true});
   }
 
@@ -276,12 +288,12 @@ export function mountRangeGame(root) {
     audio.play('over');
     setPhase('finished');
     title.textContent = 'GAME OVER';
-    const result = `Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
+    const result = tr`Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
     const next = STAGES[stage];
     message.textContent = next
-      ? `${result} Etap ${stage + 1} odblokujesz po zdobyciu ${next.points} pkt.`
+      ? tr`${result} Etap ${stage + 1} odblokujesz po zdobyciu ${next.points} pkt.`
       : result;
-    play.textContent = 'Zagraj ponownie';
+    play.textContent = t('Zagraj ponownie');
     updateReadouts();
     paint();
     play.focus({preventScroll: true});
@@ -350,9 +362,9 @@ export function mountRangeGame(root) {
     stopFrame();
     audio.pause();
     setPhase('paused');
-    title.textContent = 'Pauza.';
-    message.textContent = 'Wznów rundę, gdy będziesz gotowy.';
-    play.textContent = 'Wznów grę';
+    title.textContent = t('Pauza.');
+    message.textContent = t('Wznów rundę, gdy będziesz gotowy.');
+    play.textContent = t('Wznów grę');
     paint();
     if (focus) play.focus({preventScroll: true});
   }
@@ -376,6 +388,11 @@ export function mountRangeGame(root) {
       const points = distance <= target.radius * .35 ? 100 : 50;
       hits++;
       score += points;
+      if (score > record) {
+        record = score;
+        recordValue.textContent = String(record).padStart(4, '0');
+        try { localStorage.setItem(RECORD_KEY, String(record)); } catch {}
+      }
       targets.splice(index, 1);
       feedback.push({x: target.x / width, y: target.y / height, points, born: elapsed});
       const next = STAGES[stage];
@@ -392,7 +409,7 @@ export function mountRangeGame(root) {
 
   function updateSoundButton() {
     soundButton.setAttribute('aria-pressed', String(audio.enabled));
-    soundButton.textContent = audio.enabled ? 'Dźwięk: wł.' : 'Dźwięk: wył.';
+    soundButton.textContent = audio.enabled ? t('Dźwięk: wł.') : t('Dźwięk: wył.');
   }
   updateSoundButton();
   soundButton.addEventListener('click', () => {

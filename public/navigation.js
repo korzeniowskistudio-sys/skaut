@@ -1,3 +1,4 @@
+import {t} from './i18n.js?v=20261107-english';
 const instances = new WeakMap();
 
 /** Enhance native header links; the existing router owns navigation and menu state. */
@@ -37,7 +38,7 @@ export function initNavigation() {
     } else restoreCoveredContent();
     if (!toggle) return;
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Zamknij menu' : 'Otwórz menu');
+    toggle.setAttribute('aria-label', open ? t('Zamknij menu') : t('Otwórz menu'));
     const icon = toggle.querySelector('i');
     if (icon) icon.className = open ? 'ph ph-x' : 'ph ph-list';
   }

@@ -1,9 +1,10 @@
+import {t, localPath, sitePath} from './i18n.js?v=20261107-english';
 const tabs = [
-  {path: '/', label: 'Start', icon: 'house'},
-  {path: '/treningi', label: 'Treningi', icon: 'target'},
-  {path: '/kalendarz', label: 'Kalendarz', icon: 'calendar-blank'},
-  {path: '/galeria', label: 'Galeria', icon: 'images'},
-  {path: '/moj-skaut', label: 'Konto', icon: 'user-circle'},
+  {path: '/', label: t('Start'), icon: 'house'},
+  {path: '/treningi', label: t('Treningi'), icon: 'target'},
+  {path: '/kalendarz', label: t('Kalendarz'), icon: 'calendar-blank'},
+  {path: '/galeria', label: t('Galeria'), icon: 'images'},
+  {path: '/moj-skaut', label: t('Konto'), icon: 'user-circle'},
 ];
 
 /** Keep native links so the site's router and ordinary archive navigation work. */
@@ -13,10 +14,10 @@ export function initMobileNavigation() {
     navigation = document.createElement('nav');
     navigation.id = 'mobile-navigation';
     navigation.className = 'mobile-navigation';
-    navigation.setAttribute('aria-label', 'Główna nawigacja mobilna');
+    navigation.setAttribute('aria-label', t('Główna nawigacja mobilna'));
     for (const tab of tabs) {
       const link = document.createElement('a');
-      link.href = tab.path;
+      link.href = sitePath(tab.path);
       link.dataset.mobilePath = tab.path;
       const icon = document.createElement('i');
       icon.className = `ph ph-${tab.icon}`;
@@ -35,7 +36,7 @@ export function initMobileNavigation() {
 
 /** Query strings do not change the selected section; unrelated archives have none. */
 export function update(path = window.location.pathname) {
-  const pathname = new URL(path, window.location.origin).pathname.replace(/\/+$/, '') || '/';
+  const pathname = localPath(new URL(path, window.location.origin).pathname);
   for (const link of document.querySelectorAll('#mobile-navigation [data-mobile-path]')) {
     if (link.dataset.mobilePath === pathname) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');

@@ -89,6 +89,8 @@
 .range-stat > span { font-size: .65rem; letter-spacing: .09em; text-transform: uppercase; }
 .range-stat > strong { font: 700 29px/1 var(--display); font-variant-numeric: tabular-nums; }
 .range-stat--score > strong { color: #ffce80; }
+.range-record { font-size: .65rem; line-height: 1.25; white-space: nowrap; }
+.range-record b { font-variant-numeric: tabular-nums; }
 .range-overlay {
   position: absolute;
   z-index: 2;

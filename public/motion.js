@@ -1,3 +1,4 @@
+import {t} from './i18n.js?v=20261107-english';
 const ARRIVE = 'cubic-bezier(.16,1,.3,1)';
 const DEPART = 'cubic-bezier(.55,0,1,.45)';
 const SOUND_KEY = 'skaut-transition-sound';
@@ -162,7 +163,7 @@ function createMechanicalSound(doc) {
   button.innerHTML = '<i class="ph ph-speaker-simple-slash" aria-hidden="true"></i>';
   button.disabled = !supported;
   function update() {
-    const label = !supported ? 'Dźwięk przejść jest niedostępny' : enabled ? 'Wyłącz dźwięk przejść' : 'Włącz dźwięk przejść';
+    const label = !supported ? t('Dźwięk przejść jest niedostępny') : enabled ? t('Wyłącz dźwięk przejść') : t('Włącz dźwięk przejść');
     button.setAttribute('aria-label', label);
     button.setAttribute('title', label);
     button.setAttribute('aria-pressed', String(enabled));

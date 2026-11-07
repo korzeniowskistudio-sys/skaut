@@ -38,3 +38,15 @@
   .header #navigation .navigation-arrow{position:static;font-size:28px;opacity:1;transform:none;margin-left:20px}
 }
 @media(forced-colors:active){.header #navigation>a[aria-current=page]{outline:2px solid Highlight;outline-offset:-2px}.header #navigation>a:focus-visible{outline:3px solid Highlight;outline-offset:-3px}}
+
+.language-switch{display:grid;place-items:center;flex:0 0 44px;min-width:44px;min-height:44px;color:white;font-weight:800;font-size:14px;letter-spacing:.06em;text-decoration:none;border:1px solid #ffffff70}
+.language-switch:is(:hover,:focus-visible){background:white;color:var(--navy);text-decoration:none}
+@media(min-width:1001px) and (max-width:1200px){
+  .header{gap:12px}
+  .header #navigation>a{font-size:clamp(20px,2vw,25px);padding-inline:5px}
+}
+@media(max-width:1000px){.header .language-switch{order:1}}
+@media(max-width:360px){
+  .has-mobile-navigation .header .brand{gap:6px}
+  .has-mobile-navigation .header .brand span{font-size:28px}
+}
