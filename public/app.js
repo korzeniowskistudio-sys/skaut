@@ -8,6 +8,7 @@ const mobileNavigation=initMobileNavigation();
 const topNavigation=initNavigation();
 let navigationIntent=0;
 let session={member:null,csrf:'',demoMode:false},routeNumber=0,authRegister=false,galleryCleanup=null,calendarCleanup=null,heroMotionCleanup=null;
+let rangeGameCleanup = null;
 function savedIds(key) {
  try {
   const ids = JSON.parse(localStorage.getItem(key) || '[]');
@@ -16,7 +17,7 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261107-gadget-basket');
+const loadGadgets = () => import('./gadgets.js?v=20261107-range-game');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
@@ -137,9 +138,13 @@ async function adminPage(seq){if(!session.member){loginPage();return;}const data
 async function galleryPage(seq){const {renderGallery}=await import('./gallery.js?v=20261107-albums-calendar');if(seq!==routeNumber)return;document.title='Galeria — SKAUT';const cleanup=await renderGallery({main,isCurrent:()=>seq===routeNumber});if(seq===routeNumber)galleryCleanup=cleanup;else cleanup();}
 
 async function gadgetsPage(seq) {
- const {gadgetsMarkup} = await loadGadgets();
+ const [{gadgetsMarkup}, {mountRangeGame}] = await Promise.all([
+  loadGadgets(),
+  import('./range-game.js?v=20261107-range-game'),
+ ]);
  if (seq !== routeNumber) return;
  display(gadgetsMarkup(gadgetBasket), 'Gadżety klubowe');
+ rangeGameCleanup = mountRangeGame(main.querySelector('[data-range-game]'));
  main.querySelectorAll('[data-gadget-add]').forEach(button => button.addEventListener('click', () => {
   const id = button.dataset.gadgetAdd;
   if (gadgetBasket.includes(id)) {
@@ -153,7 +158,7 @@ async function gadgetsPage(seq) {
  }));
 }
 
-async function render(){const p=/^\/(?:gadgets|gadzety)\/?$/.test(location.pathname)?'/gadzety':location.pathname;mobileNavigation.update(p);const seq=++routeNumber;galleryCleanup?.();galleryCleanup=null;calendarCleanup?.();calendarCleanup=null;heroMotionCleanup?.();heroMotionCleanup=null;document.querySelector('#navigation').classList.remove('open');topNavigation.update();document.querySelector('#menu-toggle').setAttribute('aria-expanded','false');for(const a of document.querySelectorAll('#navigation a')){if(p.startsWith(new URL(a.href).pathname))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
+async function render(){const p=/^\/(?:gadgets|gadzety)\/?$/.test(location.pathname)?'/gadzety':location.pathname;mobileNavigation.update(p);const seq=++routeNumber;galleryCleanup?.();galleryCleanup=null;calendarCleanup?.();calendarCleanup=null;heroMotionCleanup?.();heroMotionCleanup=null;rangeGameCleanup?.();rangeGameCleanup=null;document.querySelector('#navigation').classList.remove('open');topNavigation.update();document.querySelector('#menu-toggle').setAttribute('aria-expanded','false');for(const a of document.querySelectorAll('#navigation a')){if(p.startsWith(new URL(a.href).pathname))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
  main.setAttribute('aria-busy','true');try{if(p==='/')await home(seq);else if(p==='/treningi')await eventsPage(seq);else if(p==='/kalendarz')await calendarPage(seq);else if(p==='/aktualnosci')await newsPage(seq);else if(p.startsWith('/aktualnosci/'))await articlePage(seq);else if(p==='/moj-skaut')await memberPage(seq);else if(p==='/koszyk')await basketPage(seq);else if(p==='/galeria')await galleryPage(seq);else if(p==='/gadzety')await gadgetsPage(seq);else if(p==='/klub')clubPage();else if(p==='/informacje')infoPage();else if(p==='/admin')await adminPage(seq);else display(`<section class="error-page"><h1>Nie ma takiej strony.</h1><p>Sprawdź adres albo wróć na stronę główną.</p><a href="/" class="btn">Strona główna</a></section>`,'Nie znaleziono strony');}catch(e){if(seq===routeNumber)display(`<section class="error-page"><h1>${e.status===403?'Brak dostępu.':'Chwila przerwy.'}</h1><p>${esc(e.message)}</p><a href="/" class="btn">Wróć na stronę główną</a></section>`,'Informacja');}finally{if(seq===routeNumber){main.removeAttribute('aria-busy');pageMotion.enter();}}}
 updateBasket();
 try{session=await api('/session');document.querySelector('#demo-notice').hidden=!session.demoMode;document.body.classList.toggle('has-demo',session.demoMode);await render();}catch(e){display(`<section class="error-page"><h1>Serwis chwilowo niedostępny.</h1><p>${esc(e.message)}</p></section>`,'Przerwa techniczna');}

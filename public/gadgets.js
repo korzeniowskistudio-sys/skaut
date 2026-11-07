@@ -1,3 +1,5 @@
+import {rangeGameMarkup} from './range-game.js?v=20261107-range-game';
+
 // Positions follow the 3 × 2 studio contact sheets.
 const gadgets = [
   {
@@ -100,22 +102,7 @@ function card(index, basket, featured = false) {
 
 export function gadgetsMarkup(basket = []) {
   return `<div class="gadgets-page">
-    <section class="gadgets-game" aria-labelledby="gadgets-game-title">
-      <div class="gadgets-game-copy">
-        <p class="gadgets-kicker">Strefa gry</p>
-        <p class="gadgets-game-title" id="gadgets-game-title">Gra klubowa.</p>
-        <p>Tu pojawi się interaktywna gra SKAUT.</p>
-        <span class="gadgets-game-status">W przygotowaniu</span>
-      </div>
-      <div class="gadgets-game-mark" aria-hidden="true">
-        <svg viewBox="0 0 360 360" fill="none">
-          <circle cx="180" cy="180" r="165"/><circle cx="180" cy="180" r="132"/>
-          <circle cx="180" cy="180" r="99"/><circle cx="180" cy="180" r="66"/>
-          <path d="M180 0v49m0 262v49M0 180h49m262 0h49"/>
-        </svg>
-        <img src="/assets/optimized/skaut-logo-144.png" alt="" width="144" height="144">
-      </div>
-    </section>
+    ${rangeGameMarkup()}
     <section class="gadgets-catalogue" aria-labelledby="gadgets-title">
       <header class="gadgets-intro">
         <div><p class="gadgets-kicker">Kolekcja klubowa</p><h1 id="gadgets-title">Gadżety SKAUT.</h1></div>
