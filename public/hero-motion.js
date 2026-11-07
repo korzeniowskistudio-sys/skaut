@@ -1,6 +1,38 @@
 const HOLD = 5000;
 const BURST = 2050;
 
+// [row, left edge, right edge] traced on the original 1672 × 941 photograph.
+// Below the hair, the left edge follows the foreground woman's occluding contour.
+const rearContour = [
+  [0,1054,1212], [10,1043,1217], [20,1015,1229], [30,1007,1241], [40,1001,1250],
+  [50,1000,1268], [60,998,1273], [70,993,1283], [80,990,1290], [90,989,1295],
+  [100,989,1302], [110,991,1312], [120,994,1310], [130,1000,1311], [140,1007,1311],
+  [150,1011,1311], [160,1016,1309], [170,1020,1307], [180,1024,1335], [190,1028,1343],
+  [200,1034,1344], [220,1037,1347], [240,1041,1347], [260,1045,1346], [280,1051,1348],
+  [295,1057,1364], [310,1061,1393], [325,1066,1414], [340,1070,1437], [355,1074,1452],
+  [370,1077,1461], [385,1077,1469], [400,1078,1475], [420,1079,1481], [440,1078,1483],
+  [460,1073,1485], [480,1069,1486], [500,1074,1485], [520,1081,1484], [540,1088,1484],
+  [550,1100,1486], [560,1122,1486], [570,1223,1484], [580,1314,1482], [590,1338,1481],
+  [600,1351,1478], [610,1360,1477], [620,1367,1474], [630,1371,1467], [640,1374,1460],
+  [650,1377,1450], [660,1392,1415], [666,1404,1404],
+];
+const contourHeight = rearContour.at(-1)[0] + 1;
+
+function contourPixels() {
+  const pixels = new Uint8Array(contourHeight * 4);
+  let segment = 0;
+  for (let y = 0; y < contourHeight; y++) {
+    if (y > rearContour[segment + 1][0]) segment++;
+    const [top, left, right] = rearContour[segment];
+    const [bottom, nextLeft, nextRight] = rearContour[segment + 1];
+    const ratio = (y - top) / (bottom - top);
+    const l = Math.round(left + (nextLeft - left) * ratio);
+    const r = Math.round(right + (nextRight - right) * ratio);
+    pixels.set([l >> 8, l & 255, r >> 8, r & 255], y * 4);
+  }
+  return pixels;
+}
+
 const vertex = `
  attribute vec2 aPosition;
  varying vec2 vPoint;
@@ -14,6 +46,7 @@ const fragment = `
  precision highp float;
  varying vec2 vPoint;
  uniform sampler2D uPhoto;
+ uniform sampler2D uRearContour;
  uniform vec4 uCrop;
  uniform vec2 uBlink;
  uniform vec4 uMotion;
@@ -49,35 +82,43 @@ const fragment = `
 
  vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 
- vec2 rearSample(vec2 p) {
-   // Taper the sideways shift along the woman's hair, ear protection and shoulder.
-   float foregroundEdge = 996.0 + 80.0 * smoothstep(130.0, 367.0, p.y);
-   float shoulderTop = 555.0 + 115.0 * smoothstep(1270.0, 1430.0, p.x);
-   float blend = smoothstep(foregroundEdge, foregroundEdge + 52.0, p.x)
-     * (1.0 - smoothstep(1460.0, 1545.0, p.x))
-     * (1.0 - smoothstep(shoulderTop - 36.0, shoulderTop, p.y));
-   return p + vec2(20.0 * uRearSlide * blend, 0.0);
+ vec4 rearLayer(vec2 p) {
+   float shift = 20.0 * uRearSlide;
+   if (shift < 0.05 || p.x < 985.0 || p.x > 1490.0 || p.y >= 666.0) return vec4(0.0);
+   vec4 edges = texture2D(uRearContour, vec2(0.5, (p.y + 0.5) / ${contourHeight}.0));
+   float left = dot(edges.rg, vec2(65280.0, 255.0));
+   float right = dot(edges.ba, vec2(65280.0, 255.0));
+   float inset = min(p.x - left, right - p.x);
+   if (inset <= 5.0) return vec4(0.0);
+
+   // Ease the displacement to zero inside the contour. This keeps the original
+   // background and the naturally soft photographic edge pixel-aligned.
+   float influence = smoothstep(5.0, 52.0, inset);
+   vec2 rear = p + vec2(shift * influence, 0.0);
+   vec2 grip = influence * uMotion.w * vec2(4.0, 2.5) * weight(rear, vec2(1350.0, 485.0), vec2(139.0, 143.0));
+   vec2 source = rear + grip;
+   float alpha = smoothstep(0.03, 0.65, length(source - p));
+   vec4 man = vec4(texture2D(uPhoto, source / plate).rgb * alpha, alpha);
+   man = over(lid(rear, vec2(1076.0, 252.0), 29.0, 0.04, vec2(7.0, 6.0), uBlink.y * 0.62), man);
+   man = over(lid(rear, vec2(1207.0, 251.0), 35.0, 0.055, vec2(8.5, 7.0), uBlink.y), man);
+   return man * smoothstep(5.0, 12.0, inset);
  }
 
  void main() {
    vec2 p = (uCrop.xy + vPoint * uCrop.zw) * plate;
-   vec2 rear = rearSample(p);
-   vec2 q = rear;
+   vec2 q = p;
    q += uMotion.x * (
      vec2(-4.1, 1.6) * weight(p, vec2(572.0, 145.0), vec2(142.0, 128.0)) +
      vec2(-3.3, 0.9) * weight(p, vec2(936.0, 77.0), vec2(104.0, 97.0)) +
      vec2(3.7, -1.2) * weight(p, vec2(1003.0, 553.0), vec2(57.0, 91.0)));
    q += uMotion.y * vec2(-0.9, 3.5) * weight(p, vec2(1170.0, 716.0), vec2(241.0, 159.0));
    q += uMotion.z * vec2(-4.6, 2.8) * weight(p, vec2(660.0, 774.0), vec2(220.0, 208.0));
-   q += uMotion.w * vec2(4.0, 2.5) * weight(rear, vec2(1350.0, 485.0), vec2(139.0, 143.0));
    float opacity = smoothstep(0.035, 0.62, length(q - p));
    vec3 color = texture2D(uPhoto, q / plate).rgb;
    vec4 frame = vec4(color * opacity, opacity);
    frame = over(lid(p, vec2(705.0, 404.5), 47.0, -0.045, vec2(14.5, 10.5), uBlink.x), frame);
    frame = over(lid(p, vec2(878.0, 387.0), 49.0, -0.32, vec2(14.4, 12.0), uBlink.x), frame);
-   frame = over(lid(rear, vec2(1076.0, 252.0), 29.0, 0.04, vec2(7.0, 6.0), uBlink.y * 0.62), frame);
-   frame = over(lid(rear, vec2(1207.0, 251.0), 35.0, 0.055, vec2(8.5, 7.0), uBlink.y), frame);
-   gl_FragColor = frame;
+   gl_FragColor = over(frame, rearLayer(p));
  }`;
 
 function renderer(image) {
@@ -119,6 +160,16 @@ function renderer(image) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const contour = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, contour);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, contourHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, contourPixels());
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.uniform1i(gl.getUniformLocation(program, 'uRearContour'), 1);
+  gl.activeTexture(gl.TEXTURE0);
   const crop = gl.getUniformLocation(program, 'uCrop');
   const blink = gl.getUniformLocation(program, 'uBlink');
   const motion = gl.getUniformLocation(program, 'uMotion');
@@ -159,6 +210,7 @@ function renderer(image) {
     },
     dispose() {
       gl.deleteTexture(texture);
+      gl.deleteTexture(contour);
       gl.deleteBuffer(quad);
       gl.deleteProgram(program);
       canvas.remove();
@@ -235,7 +287,7 @@ export function mountHeroMotion(image) {
           if (dirty) dirty = !painter.fit();
           if (!dirty) painter.draw(
             [rear ? 0 : blinkAt(t, 610), rear ? blinkAt(t, 850) : 0],
-            [pulse(t, 80, 1800) * (rear ? -0.42 : 1), pulse(t, 240, 1720) * (rear ? 0.32 : 1),
+            [rear ? 0 : pulse(t, 80, 1800), rear ? 0 : pulse(t, 240, 1720),
              rear ? 0 : pulse(t, 440, 1370), rear ? pulse(t, 230, 1530) : 0],
             rear ? pulse(t, 110, 1790) : 0,
           );

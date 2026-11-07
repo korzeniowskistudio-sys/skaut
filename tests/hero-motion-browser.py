@@ -43,6 +43,21 @@ with sync_playwright() as p:
     expect(photo).to_be_visible()
     assert photo.evaluate('img => img.getAnimations().length === 0')
     expect(layer).to_have_count(0)
+    # Sample the ceiling and the woman's face, then a point on the man's face.
+    # The first two used to pick up movement from a broadly feathered shift.
+    patches = photo.evaluate('''img => {
+      const rect = img.getBoundingClientRect();
+      const scale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+      const width = img.naturalWidth * scale, height = img.naturalHeight * scale;
+      const [x, y] = getComputedStyle(img).objectPosition.split(' ').map(parseFloat);
+      const left = rect.left + (rect.width - width) * x / 100;
+      const top = rect.top + (rect.height - height) * y / 100;
+      return [[1380,150,55,90], [756,240,66,65], [1150,155,63,60]].map(([px,py,w,h]) => ({
+        x: left + px * width / 1672, y: top + py * height / 941,
+        width: w * width / 1672, height: h * height / 941,
+      }));
+    }''')
+    before = [page.screenshot(clip=patch) for patch in patches]
     page.wait_for_function('() => heroFrames.eyes[0] > .7', timeout=10_000)
     state = page.evaluate('() => heroFrames')
     assert state['loaded'] and state['first'] - state['loaded'] >= 4990, state
@@ -56,6 +71,9 @@ with sync_playwright() as p:
     page.evaluate("() => window.scrollTo({top:0,behavior:'instant'})")
     page.wait_for_function('() => heroFrames.eyes[1] > .7 && heroFrames.slide > .9', timeout=10_000)
     expect(layer).to_be_visible()
+    during = [page.screenshot(clip=patch) for patch in patches]
+    assert before[:2] == during[:2], 'The background and foreground must stay still during the rear slide.'
+    assert before[2] != during[2], 'The man must move during the rear slide.'
     expect(page.locator('.hero-motion-toggle')).to_have_count(0)
 
     page.emulate_media(reduced_motion='reduce')
@@ -68,4 +86,4 @@ with sync_playwright() as p:
     expect(layer).to_have_count(0)
     assert not errors, errors
     browser.close()
-    print('Hero motion passed: five-second hold, both blinks, rear slide, offscreen stop, reduced motion and route cleanup.')
+    print('Hero motion passed: five-second hold, both blinks, isolated rear slide, offscreen stop, reduced motion and route cleanup.')
