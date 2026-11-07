@@ -62,7 +62,7 @@ const gadgets = [
   },
   {
     name: 'Uchwyt na AirTag', spec: 'Silikon · klips', price: 49,
-    description: 'Silikonowy uchwyt z klubową wszywką i krótkim paskiem do przypięcia wewnątrz torby. Cena dotyczy uchwytu bez lokalizatora.',
+    description: 'Silikonowy uchwyt z klubową wszywką i krótkim paskiem do przypięcia wewnątrz torby. Cena dotyczy uchwytu bez lokalizatora. Zawsze wiesz, gdzie zostawiłeś zabawki.',
     source: ['Belkin · uchwyt na AirTag z paskiem', 'https://www.mediaexpert.pl/smartfony-i-zegarki/akcesoria-do-telefonow/etui-na-lokalizatory/brelok-belkin-secure-holder-z-paskiem-do-apple-airtag-bialy'],
   },
   {

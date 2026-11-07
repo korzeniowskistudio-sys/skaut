@@ -101,7 +101,7 @@ async function adminPage(seq){if(!session.member){loginPage();return;}const data
 async function galleryPage(seq){const {renderGallery}=await import('./gallery.js?v=20261107-albums-calendar');if(seq!==routeNumber)return;document.title='Galeria — SKAUT';const cleanup=await renderGallery({main,isCurrent:()=>seq===routeNumber});if(seq===routeNumber)galleryCleanup=cleanup;else cleanup();}
 
 async function gadgetsPage(seq) {
- const {gadgetsMarkup} = await import('./gadgets.js?v=20261107-gadgets');
+ const {gadgetsMarkup} = await import('./gadgets.js?v=20261107-airtag-copy');
  if (seq === routeNumber) display(gadgetsMarkup(), 'Gadżety klubowe');
 }
 
