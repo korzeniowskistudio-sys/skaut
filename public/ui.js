@@ -8,7 +8,14 @@ export const money=v=>new Intl.NumberFormat('pl-PL',{style:'currency',currency:'
 export const date=v=>new Intl.DateTimeFormat('pl-PL',{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Warsaw'}).format(new Date(v));
 export const time=v=>new Intl.DateTimeFormat('pl-PL',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Warsaw'}).format(new Date(v));
 export const kinds={'pistolet':'Pistolet','karabin':'Karabin','pierwszy-raz':'Pierwszy raz','zawody':'Zawody'};
-export const trainingTypeIcon=type=>`<i class="ph ph-${({'pistolet':'target','karabin':'crosshair','pierwszy-raz':'graduation-cap','zawody':'medal'})[type]||'calendar-blank'}" aria-hidden="true"></i>`;
+const disciplineOutlines={
+ 'pistolet':'M3 6.5h17.5v5H9.8L7.2 19H3l2.7-7.5H3z M9.8 11.5v2.7h3a2.2 2.2 0 0 0 2.2-2.2v-.5 M5 6.5V5m12.5 1.5V5',
+ 'karabin':'M1.5 9.5h4.4l2.7-1.4H17v2h5.5v2.6H13l-1.2 3.5H9l.7-3.5H7.6l-2.3 2.6H1.5z',
+};
+export function trainingTypeIcon(type){
+ if(Object.hasOwn(disciplineOutlines,type))return `<svg class="training-type-icon" data-training-icon="${type}" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${disciplineOutlines[type]}"/></svg>`;
+ return `<i class="ph ph-${type==='pierwszy-raz'?'graduation-cap':type==='zawody'?'medal':'calendar-blank'}" aria-hidden="true"></i>`;
+}
 export const statuses={pending:'Oczekuje na potwierdzenie',confirmed:'Potwierdzona',cancelled:'Anulowana',expired:'Wygasła',awaiting_confirmation:'Oczekuje na potwierdzenie'};
 export function field(name,label,type='text',extra='') {return `<label class="field">${esc(label)}<input name="${name}" type="${type}" ${extra}></label>`;}
 export const empty=(title,body)=>`<div class="empty"><h3>${esc(title)}</h3><p>${esc(body)}</p></div>`;

@@ -13,7 +13,7 @@ with sync_playwright() as p:
  expect(page.locator('[data-sample-training]')).to_have_count(10)
  expect(page.locator('[data-add]')).to_have_count(0)
  expect(page.get_by_text('Przykładowe treningi.',exact=True)).to_be_visible()
- assert page.locator('.event-kind .ph').count()==10
+ assert page.locator('.event-kind :is(.ph,.training-type-icon)').count()==10
  page.locator('[data-training-type="pistolet"]').click()
  expect(page.locator('[data-sample-training]')).to_have_count(3)
  link=page.get_by_role('link',name='Zobacz w kalendarzu').first
