@@ -2,31 +2,31 @@
 const gadgets = [
   {
     name: 'Torba na szpej', spec: '30 l · haft', price: 219,
-    description: 'Torba na trening z przestawnymi przegrodami, osobną kieszenią na mokrą odzież i dużymi uchwytami zamków. Na froncie herb SKAUT i haft „torba na szpej”.',
+    description: 'Torba na trening z przestawnymi przegrodami, osobną kieszenią na mokrą odzież i dużymi uchwytami zamków. Na froncie logo klubu i haft „torba na szpej”.',
     source: ['4F · torba 30 l z organizerem', 'https://4f.com.pl/torba-sportowa-30-l-czarna-4fraw26atbaf130-20s.html'],
   },
   {
     name: 'Bluza klubowa', spec: 'Kaptur · haft', price: 189,
-    description: 'Gruba grafitowa bluza z haftowanym herbem na piersi. W kieszonce wewnątrz kangurki jest miejsce na legitymację.',
+    description: 'Gruba grafitowa bluza z haftowanym logiem klubu na piersi. W kieszonce wewnątrz kangurki jest miejsce na legitymację.',
     source: ['Polonia Warszawa · bluza z haftowaną tarczą', 'https://sklep.poloniawarszawa.com/pl/p/Czarna-bluza-z-charakterem/130'],
   },
   {
     name: 'Etui na okulary', spec: 'Twarda skorupa', price: 59,
-    description: 'Sztywne etui z herbem, miękką wyściółką i kieszonką na ściereczkę. Pętla pozwala przypiąć je w torbie.',
+    description: 'Sztywne etui z logiem klubu, miękką wyściółką i kieszonką na ściereczkę. Pętla pozwala przypiąć je w torbie.',
     source: ['Arena · twarde etui na okulary', 'https://www.decathlon.pl/p/mp/etui-na-okulary-plywackie-twarde-uniwersalne-unisex-arena-case/d5fbeaf8-63e0-4b1a-9f10-6be9776f1a43/c1c249'],
   },
   {
     name: 'Zestaw naszywek', spec: '3 szt. · rzep', price: 49,
-    description: 'Herb SKAUT i dwie naszywki z piktogramami. Przypnij je do panelu torby, aby oznaczyć kieszenie i szybciej znaleźć wyposażenie.',
+    description: 'Logo klubu i dwie naszywki z piktogramami. Przypnij je do panelu torby, aby oznaczyć kieszenie i szybciej znaleźć wyposażenie.',
     source: ['Fabryka Haftu · naszywki na rzep', 'https://sklep.fabryka-haftu.pl/pol_m_WOJSKOWE-101.html'],
   },
   {
     name: 'Notes treningowy', spec: 'A6 · papier odporny na wilgoć', price: 45,
-    description: 'Kieszonkowy notes z herbem. Każda karta ma miejsce na datę, wyniki serii i jedną rzecz do przećwiczenia następnym razem.',
+    description: 'Kieszonkowy notes z logiem klubu. Każda karta ma miejsce na datę, wyniki serii i jedną rzecz do przećwiczenia następnym razem.',
     source: ['Rite in the Rain · notes terenowy', 'https://www.naostrzu.pl/26320%2Crite-in-the-rain---notes-wodoodporny---3-1-2x5-----954---oliwkowy-26320'],
   },
   {
-    name: 'Brelok do kalendarza', spec: 'NFC · herb', price: 29,
+    name: 'Brelok do kalendarza', spec: 'NFC · logo klubu', price: 29,
     description: 'Przyłóż telefon z NFC do breloka, aby otworzyć publiczny kalendarz SKAUT. Brelok zawiera tylko link do strony klubu.',
     source: ['CrePrint · znakowany brelok NFC', 'https://creprint.pl/'],
   },
@@ -37,22 +37,22 @@ const gadgets = [
   },
   {
     name: 'Mata serwisowa', spec: 'Silikon · przegródki', price: 99,
-    description: 'Antypoślizgowa mata z herbem i przegródkami na drobiazgi. Chroni blat, a rant zapobiega staczaniu się małych części.',
+    description: 'Antypoślizgowa mata z logiem klubu i przegródkami na drobiazgi. Chroni blat, a rant zapobiega staczaniu się małych części.',
     source: ['Megadron · mata z organizerem', 'https://megadron.pl/pl/products/mata-silikonowa-do-lutowania-serwisowa-z-organizerami-i-magnesami-450x300x16mm-niebieska-30667.html'],
   },
   {
     name: 'Termos klubowy', spec: '500 ml · grawer', price: 79,
-    description: 'Stalowy termos z grawerowanym herbem i nakrętką, która służy jako kubek. Gumowa stopka tłumi stuk przy odstawianiu.',
+    description: 'Stalowy termos z grawerowanym logiem klubu i nakrętką, która służy jako kubek. Gumowa stopka tłumi stuk przy odstawianiu.',
     source: ['Quechua · termos MH900 0,5 l', 'https://www.decathlon.pl/p/termos-turystyczny-quechua-mh900-nierdzewny-0-5-l/_/R-p-301267'],
   },
   {
     name: 'Suchy worek', spec: '5 l · rolowane zamknięcie', price: 59,
-    description: 'Lekki worek z herbem na suche ubranie i drobiazgi. Po treningu oddziela wilgotne rzeczy od reszty wyposażenia.',
+    description: 'Lekki worek z logiem klubu na suche ubranie i drobiazgi. Po treningu oddziela wilgotne rzeczy od reszty wyposażenia.',
     source: ['Decathlon · worek żeglarski 5 l', 'https://www.decathlon.pl/p/worek-zeglarski-decathlon-ipx6-5-l-szczelny/349390/c241c382m8826343'],
   },
   {
     name: 'Podkładka na wyniki', spec: 'A5 · klips i ołówek', price: 39,
-    description: 'Sztywna podkładka z herbem, mocnym klipsem i pętlą na ołówek. W zestawie bloczek klubowych kart wyników.',
+    description: 'Sztywna podkładka z logiem klubu, mocnym klipsem i pętlą na ołówek. W zestawie bloczek klubowych kart wyników.',
     source: ['Techrebal · podkładka A5 z grawerem', 'https://techrebal.pl/pl/p/CLIPBOARD-DREWNIANY-A5-Z-KLIPSEM-GRAWER-LOGO-KLIP/2868'],
   },
   {
@@ -72,7 +72,7 @@ const gadgets = [
   },
   {
     name: 'Licznik serii', spec: 'Mechaniczny · bez baterii', price: 39,
-    description: 'Ręczny klikacz z herbem, pętlą na palec i pokrętłem zerowania. Jedno kliknięcie po każdej ukończonej serii ułatwia prowadzenie zapisków.',
+    description: 'Ręczny klikacz z logiem klubu, pętlą na palec i pokrętłem zerowania. Jedno kliknięcie po każdej ukończonej serii ułatwia prowadzenie zapisków.',
     source: ['MoxTech · ręczny licznik mechaniczny', 'https://moxtech.pl/product-pol-660-Licznik-mechaniczny-klikacz-reczny-PEDOMETR.html'],
   },
 ];
