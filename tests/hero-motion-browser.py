@@ -43,6 +43,8 @@ with sync_playwright() as p:
     expect(photo).to_be_visible()
     assert photo.evaluate('img => img.getAnimations().length === 0')
     expect(layer).to_have_count(0)
+    # Isolate the photograph from the separate page-wide smoke animation.
+    page.locator('.home-smoke').evaluate("smoke => smoke.style.visibility = 'hidden'")
     # Sample the ceiling and the woman's face, then a point on the man's face.
     # The first two used to pick up movement from a broadly feathered shift.
     patches = photo.evaluate('''img => {

@@ -11,14 +11,41 @@
 @media(prefers-reduced-motion:reduce){.header .sound-toggle:active i{transform:none}}
 @media(forced-colors:active){.header .sound-toggle{color:ButtonText}.header .sound-toggle[aria-pressed=true]{border-color:Highlight}.header .sound-toggle:focus-visible{outline-color:Highlight}}
 
-.hero-photo>.hero-motion-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.home-photo-frame{display:block;min-width:0;overflow:hidden;--photo-travel:1%}
+.photo-motion-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.home-photo-frame{position:relative;display:block;min-width:0;overflow:hidden}
 .home-photo-frame>img{display:block}
-.image-story>.home-photo-frame{--photo-travel:-1%}
+
+.home-smoke{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:30;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:.15;
+  background:rgb(150 150 150 / .12);
+}
+body:has(> #main > .hero) > .home-smoke{display:block}
+.home-smoke::before,.home-smoke::after{
+  content:'';
+  position:absolute;
+  inset:-14%;
+  background:url('/assets/home-smoke.svg') center / 100% 100% no-repeat;
+}
+.home-smoke::after{
+  background-size:135% 125%;
+  background-position:70% 24%;
+  opacity:.55;
+}
 @media(prefers-reduced-motion:no-preference){
-  #main:not([inert]) .home-photo-frame.photo-in-view>img{animation:supporting-photo-drift 18s ease-in-out infinite}
-  @keyframes supporting-photo-drift{
-    0%,30%,67%,100%{transform:none}
-    48%{transform:translate3d(var(--photo-travel),-.6%,0) scale(1.035)}
-  }
+  .home-smoke::before{animation:smoke-drift 72s ease-in-out infinite alternate}
+  .home-smoke::after{animation:mist-rise 93s ease-in-out infinite alternate}
+}
+@keyframes smoke-drift{
+  from{transform:translate3d(-4%,4%,0)}
+  to{transform:translate3d(6%,-7%,0)}
+}
+@keyframes mist-rise{
+  from{transform:translate3d(5%,7%,0)}
+  to{transform:translate3d(-5%,-5%,0)}
 }
