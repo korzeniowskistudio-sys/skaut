@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-07T00:00:09.784Z",
+  "passed": true,
+  "checks": [
+    "member login after process restart",
+    "full member overview equality",
+    "other member overview equality",
+    "all news id/slug/title rows retained"
+  ]
+}

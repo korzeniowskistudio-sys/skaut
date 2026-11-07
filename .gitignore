@@ -10,6 +10,9 @@ backups/
 *.sqlite-*
 *.db
 .local/
+# Rehydrated from the public source and verified against content/source-manifest.json.
+# Keep 526 MB of downloadable originals out of normal source-code clones.
+public/dokumenty/
 .credentials/
 **/ftps.json
 **/mail.json

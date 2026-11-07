@@ -29,7 +29,7 @@ with sync_playwright() as p:
  expect(page.get_by_role('heading',name='Poprawiony termin przeglądarki',exact=True)).to_be_visible()
  event=page.locator('.booking').filter(has=page.get_by_role('heading',name='Poprawiony termin przeglądarki',exact=True))
  event.get_by_role('button',name='Odwołaj',exact=True).click()
- expect(page.get_by_text('Odwołane',exact=False)).to_be_visible()
+ expect(event.get_by_text('Odwołane',exact=False)).to_be_visible()
  form=page.locator('#admin-news');form.get_by_label('Tytuł',exact=True).fill('Szkic z przeglądarki')
  form.get_by_label('Adres (np. relacja-z-treningu)').fill('szkic-z-przegladarki')
  form.get_by_label('Kategoria',exact=True).fill('Test');form.get_by_label('Krótki opis').fill('Opis testowy')

@@ -1,0 +1,22 @@
+{
+  "origin": "https://skaut.korzeniowski.net",
+  "checkedAt": "2026-11-06T23:53:51.776Z",
+  "checks": [
+    "owner staff login",
+    "two independent member registrations",
+    "Secure cookies",
+    "staff restriction",
+    "server-authoritative pricing",
+    "idempotent checkout",
+    "last-place capacity",
+    "member isolation",
+    "cross-member cancellation denied",
+    "CSRF rejection",
+    "member message persistence",
+    "cancellation and order reconciliation",
+    "test event withdrawn",
+    "327 real migrated news articles"
+  ],
+  "passed": 14,
+  "qaRecords": "Two clearly labelled test members, one cancelled test event/order/booking. No real club reservation."
+}

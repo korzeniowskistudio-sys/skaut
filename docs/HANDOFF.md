@@ -1,6 +1,6 @@
 # SKAUT handoff — 7 November 2026
 
-Latest resumed checks and actual runtime blockers: [verification-2026-11-07.md](verification-2026-11-07.md#latest-continuation--0018-cet). In the latest continuation, GitHub main at `b1f9cbf` was recovered; plain `npm ci`, all 10 tests, both browser journeys and all domain-row comparisons across a local process restart passed. Approved design and application code are unchanged. No remote deployment or content migration occurred. Actual HTTPS GET requests still return proxy CONNECT 403 before authentication. No IQHost credentials are configured in this runtime; the previously saved network draft has not taken effect here.
+Latest status: [live deployment on 7 November 2026](deployment-2026-11-07.md). SKAUT is live independently at https://skaut.korzeniowski.net/. Migrated 327 posts, 10 pages, 25 historical events and 332 documents; six source documents remain unavailable. The approved design is preserved and the original logo restored. Private SQL, live login/reservations/permissions and process-restart persistence are verified. Expelos was not modified. Treat older cloud-access blockers below as historical; use the current deployment report for operational paths and remaining work.
 
 ## User request and approved direction
 
@@ -36,9 +36,9 @@ DEMO_MODE=1 npm run dev -- --host 0.0.0.0 --port 4173 --strictPort
 
 The demo uses `data/demo.sqlite` and explicit sample-data notices. Production-data mode omits DEMO_MODE and defaults to `data/skaut.sqlite`. No databases, backups, session values or login credentials are saved in this repository. Persistent processes do not survive environment replacement.
 
-## Current deployment blocker
+## Historical cloud deployment blocker (superseded)
 
-**The site is not live. No subdomain, remote database or production application has been created.**
+The paragraphs in this section record the earlier cloud-only state. Deployment was completed locally on 7 November; see the current report above.
 
 The user supplied an `expelos-iqhost` skill inline after the initial skill search. Relevant instructions are preserved without passwords in [deployment.md](deployment.md). FTPS uses verified explicit TLS at host92093.iqhs.pl:21, with private config in ~/.config/iqhost/ftps.json or IQHOST_CONFIG; those were absent in this cloud machine. FTPS and DirectAdmin credentials are separate.
 

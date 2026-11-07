@@ -2,6 +2,8 @@
 
 Responsive Polish club website based on the user-selected monochrome photo + booking layout. Includes public news, event finder, basket, SQL-persisted member accounts, progress, schedule, messages and staff management.
 
+**Live:** https://skaut.korzeniowski.net/ · [deployment and remaining operations work](docs/deployment-2026-11-07.md).
+
 **Resume here:** [current handoff and deployment blockers](docs/HANDOFF.md). [Approved design and visual archive](design/README.md).
 
 ## Run
@@ -53,10 +55,10 @@ Staff can create/edit/cancel events; read and answer member conversations; creat
 
 ## Data and assets
 
-No content from ksskaut.pl has been migrated yet: source access returned proxy CONNECT 403. Old-site page inventory, document migration and redirects remain pending authorised access. Do not publish the illustrative demo as factual club content.
+Migrated 327 published posts, 10 pages, 25 historical events and 332 club documents from ksskaut.pl. Six linked documents were already missing at source. Historical dates and source attribution are preserved; demo fixtures remain isolated from production. See `content/source-manifest.json`. Downloadable originals are excluded from normal Git clones: run `python3 scripts/restore-documents.py` to restore and hash-verify them.
 
-Campaign imagery is generated, not documentary evidence of actual staff/facilities. `public/assets/skaut-logo.png` is a generated reconstruction and must be replaced with the user's original logo master for exact brand fidelity before production. Barlow Condensed and Manrope font licences are included in assets; Phosphor Icons are MIT-licensed (`THIRD_PARTY.md`).
+Campaign imagery is generated, not documentary evidence of actual staff/facilities. `public/assets/skaut-logo.png` is the original shield-with-white-outline artwork from the user's SKAUT identity archive. Barlow Condensed and Manrope font licences are included in assets; Phosphor Icons are MIT-licensed (`THIRD_PARTY.md`).
 
 ## Deployment
 
-See [docs/deployment.md](docs/deployment.md). Target: **skaut.korzeniowski.net**, provider identified by user: **IQHost**. Remote access, DNS, TLS, production SQL, email and the provider's runtime capabilities have not been verified. No remote deployment has been performed.
+Deployed independently on IQHost at **https://skaut.korzeniowski.net/** with Node 24, verified HTTPS and private SQLite persistence. See [the current deployment report](docs/deployment-2026-11-07.md) for protected paths, verification, rollback, backups and remaining payments/email/account-recovery/club-operations work.

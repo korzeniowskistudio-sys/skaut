@@ -1,0 +1,15 @@
+{
+  "processChanged": true,
+  "beforePid": 3205709,
+  "afterPid": 3231636,
+  "counts": {
+    "members": 3,
+    "events": 1,
+    "orders": 1,
+    "bookings": 1,
+    "messages": 1,
+    "achievements": 0,
+    "news": 327
+  },
+  "integrity": "ok"
+}

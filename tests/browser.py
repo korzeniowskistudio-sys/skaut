@@ -44,6 +44,9 @@ with sync_playwright() as p:
  expect(page.locator('.body-copy')).to_contain_text('artykuł demonstracyjny')
  page.get_by_role('link',name='Klub',exact=True).click()
  expect(page.get_by_role('heading',name='Skupienie. Sport. SKAUT.')).to_be_visible()
+ page.get_by_role('link',name='Struktura klubu i statut',exact=True).click()
+ expect(page.get_by_role('heading',name='Struktura klubu',exact=True)).to_be_visible()
+ assert page.locator('a[href^="/dokumenty/"]').count()>=1
  page.goto('http://127.0.0.1:4173/')
  page.set_viewport_size({'width':390,'height':844});page.wait_for_timeout(200)
  page.screenshot(path=str(out/'home-mobile.png'),full_page=True)
@@ -54,5 +57,5 @@ with sync_playwright() as p:
  expect(page.get_by_role('heading',name='Aktualności.')).to_be_visible()
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'News mobile overflow'
  assert not errors, errors
- print(json.dumps({'passed':['desktop hero','training filter','basket','demo login','SQL reservation','cancellation','member message','news search and detail','club page','mobile layout','mobile navigation'],'pageErrors':errors},ensure_ascii=False))
+ print(json.dumps({'passed':['desktop hero','training filter','basket','demo login','SQL reservation','cancellation','member message','news search and detail','club page and archive document navigation','mobile layout','mobile navigation'],'pageErrors':errors},ensure_ascii=False))
  browser.close()

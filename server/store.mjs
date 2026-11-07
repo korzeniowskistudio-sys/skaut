@@ -99,9 +99,10 @@ export function createStore(path) {
  };
  s.updateNews=(id,changes)=>{
   const old=db.prepare('SELECT * FROM news WHERE id=?').get(id);if(!old)throw problem(404,'Nie znaleziono artykułu.');
-  const n={...old,publishedAt:old.published_at,...changes},slug=text(n.slug,160),date=new Date(n.publishedAt);
-  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||!Number.isFinite(date.getTime()))throw problem(400,'Sprawdź adres i datę publikacji.');
-  try{db.prepare('UPDATE news SET slug=?,title=?,summary=?,body=?,category=?,published_at=?,published=?,pinned=? WHERE id=?').run(slug,text(n.title,160),text(n.summary,400),text(n.body,30000),text(n.category,80),date.toISOString(),n.published?1:0,n.pinned?1:0,id);}catch(e){if(String(e).includes('UNIQUE'))throw problem(409,'Ten adres artykułu już istnieje.');throw e;}return {id,slug};
+  const n={...old,publishedAt:old.published_at,...changes},slug=n.slug===old.slug?old.slug:text(n.slug,160),date=new Date(n.publishedAt);
+  if((slug!==old.slug&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))||!Number.isFinite(date.getTime()))throw problem(400,'Sprawdź adres i datę publikacji.');
+  const revised=(key,max)=>n[key]===old[key]?old[key]:text(n[key],max);
+  try{db.prepare('UPDATE news SET slug=?,title=?,summary=?,body=?,category=?,published_at=?,published=?,pinned=? WHERE id=?').run(slug,revised('title',160),revised('summary',400),revised('body',Math.max(30000,old.body.length)),revised('category',80),date.toISOString(),n.published?1:0,n.pinned?1:0,id);}catch(e){if(String(e).includes('UNIQUE'))throw problem(409,'Ten adres artykułu już istnieje.');throw e;}return {id,slug};
  };
  return s;
 }

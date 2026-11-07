@@ -1,0 +1,8 @@
+# Prepend to SKAUT's provider-managed .htaccess without changing Passenger config.
+# Root index.html is accelerated by LiteSpeed, so route old WordPress ID queries
+# through the application before a static homepage can be served.
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{QUERY_STRING} (^|&)(page_id|p)=[0-9]+(&|$) [NC]
+RewriteRule ^$ /api/legacy [PT,L]
+</IfModule>

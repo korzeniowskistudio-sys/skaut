@@ -1,4 +1,8 @@
-# IQHost deployment — pending account evidence
+# IQHost deployment
+
+**Current:** [verified live deployment, 7 November 2026](deployment-2026-11-07.md). The separate SKAUT application, domain/HTTPS, private SQL, source archive and live acceptance checks are complete. Payments, email, recovery, actual bookable events and recurring offsite backups remain as documented there.
+
+## Historical provisioning plan and cloud-access observations
 
 Latest access recheck: [7 November 2026, 00:18 CET](verification-2026-11-07.md#latest-continuation--0018-cet). Actual GET requests to the IQHost login and source homepage fail at the proxy with CONNECT 403; this is a network denial, not evidence of invalid credentials. No authentication or hosting mutation was attempted. Apply/publish the saved environment configuration and verify the resulting runtime policy and real requests before retrying; credentials must be supplied securely outside Git. Local installation, tests and browser/persistence checks pass, but they do not verify remote hosting capabilities or deployment.
 

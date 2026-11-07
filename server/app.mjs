@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { problem,text,now } from './store.mjs';
 import { hashPassword,verifyPassword,token,digest,clientAddress } from './security.mjs';
 
-export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new URL('../public/',import.meta.url)),appOrigin='',secureCookies=false,trustedProxies=[]}) {
+export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new URL('../public/',import.meta.url)),appOrigin='',secureCookies=false,trustedProxies=[],redirects={},archivePaths={}}) {
  const attempts=new Map();
  const cookie=(name,value,maxAge=86400)=>`${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secureCookies?'; Secure':''}`;
  return createServer(async(req,res)=>{
@@ -15,6 +15,15 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
   const json=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   try {
    const url=new URL(req.url,'http://local'),path=url.pathname;
+   if(['GET','HEAD'].includes(req.method)&&(path==='/api/legacy'||!path.startsWith('/api/'))) {
+    const decodedPath=path==='/api/legacy'?'/':decodeURIComponent(path);
+    const legacyId=url.searchParams.has('page_id')?'page_id':url.searchParams.has('p')?'p':null;
+    const target=redirects[legacyId?`${decodedPath}?${legacyId}=${url.searchParams.get(legacyId)}`:decodedPath]||redirects[decodedPath.replace(/\/$/,'')+'/'];
+    if(target&&target.startsWith('/')&&!target.startsWith('//')&&!/[\r\n]/.test(target)) {
+     const location=new URL(target,'https://local');
+     res.writeHead(301,{'Location':location.pathname+location.search+location.hash,'Cache-Control':'public, max-age=3600'});return res.end();
+    }
+   }
    const cookies=Object.fromEntries((req.headers.cookie||'').split(';').map(p=>p.trim().split('=')).filter(p=>p.length===2));
    const session=cookies.skaut_session?s.db.prepare('SELECT s.*,m.name,m.email,m.role FROM sessions s JOIN members m ON m.id=s.member_id WHERE s.token_hash=? AND s.expires_at>?').get(digest(cookies.skaut_session),now()):null;
    const member=session?{id:session.member_id,name:session.name,email:session.email,role:session.role}:null;
@@ -36,7 +45,8 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
      const expectedOrigin=appOrigin||`http://${req.headers.host}`;
      if(req.headers.origin!==expectedOrigin||!cookies.skaut_csrf||req.headers['x-csrf-token']!==(session?.csrf||cookies.skaut_csrf))throw problem(403,'Odśwież stronę i spróbuj ponownie.');
      if(!(req.headers['content-type']||'').startsWith('application/json'))throw problem(415,'Wymagany format JSON.');
-     let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>40000)throw problem(413,'Wiadomość jest zbyt długa.');}
+     const chunks=[];let bytes=0;for await(const part of req){bytes+=part.length;if(bytes>200000)throw problem(413,'Wiadomość jest zbyt długa.');chunks.push(part);}
+     const raw=Buffer.concat(chunks).toString('utf8');
      try{body=raw?JSON.parse(raw):{};}catch{throw problem(400,'Niepoprawne dane.');}
      if(body===null||Array.isArray(body)||typeof body!=='object')throw problem(400,'Niepoprawne dane.');
      const rateKey=clientAddress(req.socket.remoteAddress,req.headers['x-forwarded-for'],trustedProxies)+':'+(path.startsWith('/api/login')||path.startsWith('/api/register')?'auth':'write');
@@ -64,7 +74,7 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
     }
     if(req.method==='GET'&&path==='/api/events')return json(200,s.listEvents().filter(e=>(!url.searchParams.get('type')||e.type===url.searchParams.get('type'))&&(!url.searchParams.get('date')||new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw'}).format(new Date(e.startsAt))===url.searchParams.get('date'))));
     if(req.method==='GET'&&path==='/api/news')return json(200,s.listNews());
-    if(req.method==='GET'&&path.startsWith('/api/news/')){const article=s.article(decodeURIComponent(path.slice(10)));if(!article)throw problem(404,'Nie znaleziono artykułu.');return json(200,article);}
+    if(req.method==='GET'&&path.startsWith('/api/news/')){const article=s.article(decodeURIComponent(path.slice(10)));if(!article)throw problem(404,'Nie znaleziono artykułu.');return json(200,{...article,archive:archivePaths[article.id]||null});}
     if(req.method==='GET'&&path==='/api/me'){auth();return json(200,{member,...s.memberOverview(member.id)});}
     if(req.method==='POST'&&path==='/api/checkout'){auth();return json(201,s.checkout(member.id,body.events,body.key));}
     if(req.method==='DELETE'&&path.startsWith('/api/bookings/')){auth();s.cancelBooking(member.id,path.slice(14));return json(200,{ok:true});}
@@ -101,7 +111,7 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
    const decoded=decodeURIComponent(path);if(decoded.split('/').some(p=>p.startsWith('.')))throw problem(404,'Nie znaleziono strony.');
    const isFile=Boolean(extname(decoded)),file=resolve(publicDir,isFile?'.'+decoded:'index.html');
    if(!file.startsWith(resolve(publicDir)+sep))throw problem(404,'Nie znaleziono strony.');
-   const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.woff':'font/woff','.svg':'image/svg+xml','.ico':'image/x-icon','.txt':'text/plain; charset=utf-8'};
+   const types={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.woff':'font/woff','.svg':'image/svg+xml','.ico':'image/x-icon','.txt':'text/plain; charset=utf-8','.pdf':'application/pdf','.doc':'application/msword','.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.xls':'application/vnd.ms-excel','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','.odt':'application/vnd.oasis.opendocument.text','.ods':'application/vnd.oasis.opendocument.spreadsheet','.csv':'text/csv; charset=utf-8','.zip':'application/zip'};
    if(!types[extname(file)])throw problem(404,'Nie znaleziono pliku.');
    let data;try{data=await readFile(file);}catch{throw problem(404,'Nie znaleziono pliku.');}
    res.writeHead(200,{'Content-Type':types[extname(file)],'Cache-Control':isFile?'public, max-age=3600':'no-cache'});res.end(req.method==='HEAD'?undefined:data);
