@@ -17,7 +17,7 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261107-game-stages');
+const loadGadgets = () => import('./gadgets.js?v=20261107-three-stages');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
@@ -140,7 +140,7 @@ async function galleryPage(seq){const {renderGallery}=await import('./gallery.js
 async function gadgetsPage(seq) {
  const [{gadgetsMarkup}, {mountRangeGame}] = await Promise.all([
   loadGadgets(),
-  import('./range-game.js?v=20261107-game-stages'),
+  import('./range-game.js?v=20261107-three-stages'),
  ]);
  if (seq !== routeNumber) return;
  display(gadgetsMarkup(gadgetBasket), 'Gadżety klubowe');

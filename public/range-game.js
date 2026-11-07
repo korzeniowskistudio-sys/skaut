@@ -1,6 +1,11 @@
 const ASSETS = '/assets/range-game/';
 const STAGE_SECONDS = 30;
-const STAGE_TWO_SCORE = 500;
+const STAGE_NOTICE_SECONDS = 1;
+const STAGES = [
+  {points: 0, life: [3.1, 4.2], speed: .45, drift: .55, size: 1.45},
+  {points: 500, life: [1.85, 3.1], speed: 1, drift: 1, size: 1},
+  {points: 1000, life: [1.5, 2.55], speed: 1.23, drift: 1.15, size: .87},
+];
 const INTRO_MS = 2050;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const between = (min, max) => min + Math.random() * (max - min);
@@ -10,17 +15,18 @@ export function rangeGameMarkup() {
     <img class="range-art" src="${ASSETS}poster.webp" alt="" width="1120" height="480" fetchpriority="high">
     <img class="range-art range-art--arena" src="${ASSETS}arena.webp" data-range-arena alt="" hidden>
     <canvas class="range-canvas" aria-label="Plansza gry w ruchome tarcze" aria-describedby="range-game-controls" tabindex="-1" hidden></canvas>
+    <p class="range-stage-notice" data-range-stage-notice hidden></p>
     <div class="range-hud">
       <p class="range-hud-label">SKAUT <span>·</span> Strefa gry</p>
       <div class="range-readouts" data-range-readouts hidden>
-        <div class="range-stat" role="status"><span>Etap</span><strong data-range-stage>1 / 2</strong></div>
+        <div class="range-stat" role="status"><span>Etap</span><strong data-range-stage>1 / ${STAGES.length}</strong></div>
         <div class="range-stat"><span>Czas</span><strong data-range-time>30 s</strong></div>
         <div class="range-stat range-stat--score" role="status"><span>Wynik</span><strong data-range-score>0000</strong></div>
       </div>
     </div>
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">Ruchome tarcze.</h2>
-      <p data-range-message>Każdy etap trwa ${STAGE_SECONDS} sekund. Zdobądź ${STAGE_TWO_SCORE} pkt, aby odblokować etap 2. Celuj myszą i kliknij albo dotknij tarczy.</p>
+      <p data-range-message>Masz ${STAGE_SECONDS} sekund na etap. Etap 2 zaczyna się przy ${STAGES[1].points} pkt, a etap 3 przy ${STAGES[2].points} pkt. Celuj myszą i kliknij albo dotknij tarczy.</p>
       <button type="button" class="btn light range-play" data-range-play hidden>Graj</button>
       <button type="button" class="range-utility" data-range-skip>Pomiń intro</button>
     </div>
@@ -30,17 +36,17 @@ export function rangeGameMarkup() {
 }
 
 function newTarget(at, stage) {
-  const easy = stage === 1;
+  const difficulty = STAGES[stage - 1];
   const direction = Math.random() < .5 ? -1 : 1;
   return {
     born: at,
-    life: easy ? between(3.1, 4.2) : between(1.85, 3.1),
+    life: between(...difficulty.life),
     x: between(.12, .88),
     y: between(.23, .51),
-    velocity: direction * between(.095, .23) * (easy ? .45 : 1),
+    velocity: direction * between(.095, .23) * difficulty.speed,
     wave: between(0, Math.PI * 2),
-    drift: between(.025, .075) * (easy ? .55 : 1),
-    size: between(.84, 1.15) * (easy ? 1.45 : 1),
+    drift: between(.025, .075) * difficulty.drift,
+    size: between(.84, 1.15) * difficulty.size,
   };
 }
 
@@ -75,6 +81,7 @@ export function mountRangeGame(root) {
   const skip = root.querySelector('[data-range-skip]');
   const pause = root.querySelector('[data-range-pause]');
   const readouts = root.querySelector('[data-range-readouts]');
+  const stageNotice = root.querySelector('[data-range-stage-notice]');
   const stageValue = root.querySelector('[data-range-stage]');
   const scoreValue = root.querySelector('[data-range-score]');
   const timeValue = root.querySelector('[data-range-time]');
@@ -91,6 +98,7 @@ export function mountRangeGame(root) {
   let height = 1;
   let density = 1;
   let stage = 1;
+  let noticeTime = 0;
   let elapsed = 0;
   let lastFrame = 0;
   let nextTarget = 0;
@@ -118,6 +126,7 @@ export function mountRangeGame(root) {
     canvas.tabIndex = next === 'playing' ? 0 : -1;
     overlay.hidden = next === 'playing';
     pause.hidden = next !== 'playing';
+    stageNotice.hidden = next !== 'playing' || noticeTime <= 0;
     readouts.hidden = next === 'intro';
     skip.hidden = next !== 'intro';
     play.hidden = next === 'intro' || !context;
@@ -225,7 +234,7 @@ export function mountRangeGame(root) {
       context.fillText('+' + hit.points, hit.x * width, hit.y * height - 12 - (reduced.matches ? 0 : age * 30));
     }
     context.globalAlpha = 1;
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || noticeTime > 0) return;
     const x = aim.x * width;
     const y = aim.y * height;
     const reticle = new Path2D();
@@ -242,7 +251,7 @@ export function mountRangeGame(root) {
   }
 
   function updateReadouts() {
-    const stageLabel = stage + ' / 2';
+    const stageLabel = stage + ' / ' + STAGES.length;
     if (stageValue.textContent !== stageLabel) stageValue.textContent = stageLabel;
     const time = Math.max(0, Math.ceil(STAGE_SECONDS - elapsed)) + ' s';
     if (timeValue.textContent !== time) timeValue.textContent = time;
@@ -258,10 +267,11 @@ export function mountRangeGame(root) {
   function finish() {
     stopFrame();
     setPhase('finished');
-    title.textContent = 'Koniec gry.';
+    title.textContent = 'GAME OVER';
     const result = `Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
-    message.textContent = stage === 1
-      ? `${result} Etap 2 odblokujesz po zdobyciu ${STAGE_TWO_SCORE} pkt.`
+    const next = STAGES[stage];
+    message.textContent = next
+      ? `${result} Etap ${stage + 1} odblokujesz po zdobyciu ${next.points} pkt.`
       : result;
     play.textContent = 'Zagraj ponownie';
     updateReadouts();
@@ -273,7 +283,10 @@ export function mountRangeGame(root) {
     if (phase !== 'playing') return;
     const dt = clamp((now - lastFrame) / 1000, 0, .08);
     lastFrame = now;
-    elapsed = Math.min(STAGE_SECONDS, elapsed + dt);
+    const noticeStep = Math.min(noticeTime, dt);
+    noticeTime -= noticeStep;
+    if (noticeTime === 0 && !stageNotice.hidden) stageNotice.hidden = true;
+    elapsed = Math.min(STAGE_SECONDS, elapsed + dt - noticeStep);
     if (elapsed >= STAGE_SECONDS) {
       finish();
       return;
@@ -295,6 +308,9 @@ export function mountRangeGame(root) {
   function startStage(number) {
     stage = number;
     elapsed = 0;
+    noticeTime = number === 1 ? 0 : STAGE_NOTICE_SECONDS;
+    stageNotice.textContent = noticeTime ? `STAGE ${number}` : '';
+    stageNotice.hidden = !noticeTime;
     lastShot = -1;
     nextTarget = between(.45, .7);
     targets = [newTarget(0, stage)];
@@ -338,7 +354,7 @@ export function mountRangeGame(root) {
   }
 
   function shoot() {
-    if (phase !== 'playing' || elapsed - lastShot < .13) return;
+    if (phase !== 'playing' || noticeTime > 0 || elapsed - lastShot < .13) return;
     lastShot = elapsed;
     shots++;
     for (let index = targets.length - 1; index >= 0; index--) {
@@ -350,7 +366,8 @@ export function mountRangeGame(root) {
       score += points;
       targets.splice(index, 1);
       feedback.push({x: target.x / width, y: target.y / height, points, born: elapsed});
-      if (stage === 1 && score >= STAGE_TWO_SCORE) startStage(2);
+      const next = STAGES[stage];
+      if (next && score >= next.points) startStage(stage + 1);
       else updateReadouts();
       break;
     }

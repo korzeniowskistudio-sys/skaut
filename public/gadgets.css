@@ -46,6 +46,18 @@
 .range-game[data-phase="playing"]::after {
   background: linear-gradient(180deg, #090e1199, transparent 21%, transparent 84%, #090e1160);
 }
+.range-stage-notice {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  background: #090e1173;
+  color: white;
+  font: 700 clamp(66px, 11vw, 140px)/1 var(--display);
+  pointer-events: none;
+}
 .range-hud {
   position: absolute;
   z-index: 2;
