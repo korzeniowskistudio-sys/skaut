@@ -1,4 +1,4 @@
-import {t, english, locale, sitePath} from './i18n.js?v=20261107-english';
+import {t, english, locale, sitePath} from './i18n.js?v=20261107-zbrojownia';
 export const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const campaignImages=new Set(['/assets/hero.webp','/assets/range-front.webp','/assets/range-side.webp']);
 export function campaignImageAttrs(src,sizes){let stem;if(campaignImages.has(src))stem='/assets/optimized/'+src.slice('/assets/'.length,-'.webp'.length);else{const match=typeof src==='string'&&src.match(/^(\/assets\/campaign\/(?:photo-(?:0[1-9]|1[0-9])|licencja-klubowa-badge))-(?:360|720|1100)\.webp$/);if(!match)return '';stem=match[1];}return `srcset="${[360,720,1100].map(width=>`${stem}-${width}.webp ${width}w`).join(', ')}" sizes="${esc(sizes)}"`;}
@@ -9,19 +9,41 @@ export const money=v=>new Intl.NumberFormat(locale,{style:'currency',currency:'P
 export const date=v=>new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Warsaw'}).format(new Date(v));
 export const time=v=>new Intl.DateTimeFormat(locale,{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Warsaw'}).format(new Date(v));
 export const kinds={'pistolet':t('Pistolet'),'karabin':t('Karabin'),'pierwszy-raz':t('Pierwszy raz'),'zawody':t('Zawody')};
+const externalKinds={strzelba:t('Strzelba'),ipsc:'IPSC',szkolenia:t('Szkolenia'),inne:t('Inne treningi')};
+export const scheduleKinds=(events=[],selected='')=>({
+ ...kinds,...Object.fromEntries(Object.entries(externalKinds).filter(([type])=>type===selected||events.some(event=>event.type===type))),
+});
+export const BOOKING_HOME='https://www.zbrojownia.ksskaut.pl/';
+export const BOOKING_ACCOUNT=BOOKING_HOME+'moje-konto/';
+const bookingUrl=value=>typeof value==='string'&&/^https:\/\/www\.zbrojownia\.ksskaut\.pl\/events\/[a-z0-9-]+\/$/.test(value)?value:BOOKING_HOME;
+export function externalBookingLink(url, label=t('Rezerwuj w Zbrojowni'), classes='btn') {
+ return `<a class="${classes}" href="${bookingUrl(url)}" hreflang="pl" rel="noreferrer">${esc(label)} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`;
+}
+export function bookingNotice(state) {
+ if(!state||state==='demo')return '';
+ const note=state==='unavailable'?t('Nie udało się pobrać terminów. Aktualną listę sprawdzisz w Zbrojowni.')
+  :state==='stale'?t('Lista może być nieaktualna. Sprawdź szczegóły w Zbrojowni.')
+  :t('Terminy pochodzą ze Zbrojowni. Tam sprawdzisz wolne miejsca, zarezerwujesz i opłacisz udział.');
+ return `<aside class="booking-source" aria-label="${t('Rezerwacje w Zbrojowni')}"><div><strong>Zbrojownia</strong><p>${note}${english?' '+t('Zbrojownia jest dostępna po polsku.'):''}</p></div>${externalBookingLink(null,t('Otwórz Zbrojownię'),'btn secondary')}</aside>`;
+}
+export function externalEventRow(event) {
+ const kind=scheduleKinds([event])[event.type]||t('Trening');
+ const start=new Date(event.startsAt);
+ return `<article class="event-row external-event-row" data-zbrojownia-event><div class="event-date"><strong>${start.toLocaleDateString(locale,{day:'numeric',timeZone:'Europe/Warsaw'})}</strong>${start.toLocaleDateString(locale,{month:'short',timeZone:'Europe/Warsaw'})}</div><div><p class="event-kind">${trainingTypeIcon(event.type)} ${esc(kind)} <span class="booking-event-source">Zbrojownia</span></p><h3 lang="pl">${esc(event.title)}</h3><p><time datetime="${esc(event.startTime?event.startsAt:event.day)}">${event.startTime?esc(time(event.startsAt)):esc(date(event.startsAt))}</time>${event.location?' · '+esc(event.location):''}</p></div>${externalBookingLink(event.bookingUrl)}</article>`;
+}
 const disciplineOutlines={
  'pistolet':'M3 6.5h17.5v5H9.8L7.2 19H3l2.7-7.5H3z M9.8 11.5v2.7h3a2.2 2.2 0 0 0 2.2-2.2v-.5 M5 6.5V5m12.5 1.5V5',
  'karabin':'M1.5 9.5h4.4l2.7-1.4H17v2h5.5v2.6H13l-1.2 3.5H9l.7-3.5H7.6l-2.3 2.6H1.5z',
 };
 export function trainingTypeIcon(type){
  if(Object.hasOwn(disciplineOutlines,type))return `<svg class="training-type-icon" data-training-icon="${type}" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="${disciplineOutlines[type]}"/></svg>`;
- return `<i class="ph ph-${type==='pierwszy-raz'?'graduation-cap':type==='zawody'?'medal':'calendar-blank'}" aria-hidden="true"></i>`;
+ return `<i class="ph ph-${type==='pierwszy-raz'?'graduation-cap':type==='zawody'?'medal':type==='ipsc'?'timer':type==='szkolenia'?'graduation-cap':type==='strzelba'?'crosshair':'calendar-blank'}" aria-hidden="true"></i>`;
 }
 export const statuses={pending:t('Oczekuje na potwierdzenie'),confirmed:t('Potwierdzona'),cancelled:t('Anulowana'),expired:t('Wygasła'),awaiting_confirmation:t('Oczekuje na potwierdzenie')};
 export function field(name,label,type='text',extra='') {return `<label class="field">${esc(label)}<input name="${name}" type="${type}" ${extra}></label>`;}
 export const empty=(title,body)=>`<div class="empty"><h3>${esc(title)}</h3><p>${esc(body)}</p></div>`;
 export const intro=(title,subtitle='')=>`<div class="page-intro"><h1>${esc(title)}</h1>${subtitle?`<p>${esc(subtitle)}</p>`:''}</div>`;
-export function finder(type='',selectedDate='') {return `<form id="finder"><label class="field">${t("Rodzaj treningu")}<select name="type"><option value="">${t("Wybierz trening")}</option>${Object.entries(kinds).map(([k,v])=>`<option value="${k}" ${k===type?'selected':''}>${v}</option>`).join('')}</select></label>${field('date',t('Termin'),'date',`value="${esc(selectedDate)}"`)}<button class="btn" type="submit">${t("Sprawdź terminy")}<i class="ph ph-arrow-right" aria-hidden="true"></i></button></form>`;}
+export function finder(type='',selectedDate='',options=kinds) {return `<form id="finder"><label class="field">${t("Rodzaj treningu")}<select name="type"><option value="">${t("Wybierz trening")}</option>${Object.entries(options).map(([k,v])=>`<option value="${k}" ${k===type?'selected':''}>${v}</option>`).join('')}</select></label>${field('date',t('Termin'),'date',`value="${esc(selectedDate)}"`)}<button class="btn" type="submit">${t("Sprawdź terminy")}<i class="ph ph-arrow-right" aria-hidden="true"></i></button></form>`;}
 export function eventRow(e,basket) {return `<article class="event-row"><div class="event-date"><strong>${new Date(e.startsAt).toLocaleDateString(locale,{day:'numeric',timeZone:'Europe/Warsaw'})}</strong>${new Date(e.startsAt).toLocaleDateString(locale,{month:'short',timeZone:'Europe/Warsaw'})}</div><div><p class="event-kind">${trainingTypeIcon(e.type)} ${esc(kinds[e.type]||t('Trening'))}</p><h3>${esc(t(e.title))}</h3><p>${esc(date(e.startsAt))} · ${esc(time(e.startsAt))}</p><p>${esc(t(e.location))}</p></div><div class="price">${money(e.price)}<span class="availability">${e.available>0?`Wolne miejsca: ${e.available}`:t('Brak wolnych miejsc')}</span></div><button class="btn ${basket.includes(e.id)?'secondary':''}" data-add="${e.id}" ${e.available<1?'disabled':''}>${basket.includes(e.id)?t('W koszyku'):e.available<1?t('Brak miejsc'):t('Dodaj do koszyka')}</button></article>`;}
 export function sampleEventRow(e,dayKey){const link='/kalendarz?'+new URLSearchParams({date:dayKey,type:e.type});return `<article class="event-row sample-event-row" data-sample-training><div class="event-date"><strong>${new Date(e.startsAt).toLocaleDateString(locale,{day:'numeric',timeZone:'Europe/Warsaw'})}</strong>${new Date(e.startsAt).toLocaleDateString(locale,{month:'short',timeZone:'Europe/Warsaw'})}</div><div><p class="event-kind">${trainingTypeIcon(e.type)} ${esc(kinds[e.type]||t('Trening'))}</p><h3>${esc(t(e.title))}</h3><p>${esc(date(e.startsAt))} · ${esc(time(e.startsAt))}</p></div><span class="sample-training-tag">${t("Przykład")}</span><a class="btn secondary" href="${esc(link)}">${t("Zobacz w kalendarzu")} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a></article>`;}
 export function newsItem(n) {const image=campaignNewsImage(n);const responsive=campaignImageAttrs(image,'(max-width: 780px) calc(100vw - 48px), 31vw');return `<article class="news-item"><a href="${esc(sitePath('/aktualnosci/'+n.slug))}">${image?`<img ${responsive} src="${esc(image)}" alt="${responsive?t('Fotografia kampanijna SKAUT'):''}" loading="lazy" decoding="async" width="640" height="400">`:''}<div class="meta"><span>${esc(t(n.category))}</span>${english&&n.lang==='pl'?'<span>'+t('Wersja polska')+'</span>':''}<time datetime="${esc(n.published_at)}">${date(n.published_at)}</time></div><h2 lang="${n.lang||'pl'}">${esc(n.title)}</h2><p lang="${n.lang||'pl'}">${esc(n.summary)}</p><span class="text-link">${t("Czytaj dalej")} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></span></a></article>`;}

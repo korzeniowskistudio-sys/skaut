@@ -4,9 +4,10 @@ import { resolve,extname,sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { problem,text,now } from './store.mjs';
+import { createScheduleFeed } from './zbrojownia.mjs';
 import { hashPassword,verifyPassword,token,digest,clientAddress } from './security.mjs';
 
-export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new URL('../public/',import.meta.url)),appOrigin='',secureCookies=false,trustedProxies=[],redirects={},archivePaths={}}) {
+export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new URL('../public/',import.meta.url)),appOrigin='',secureCookies=false,trustedProxies=[],redirects={},archivePaths={},scheduleFeed=createScheduleFeed()}) {
  const attempts=new Map();
  const cookie=(name,value,maxAge=86400)=>`${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secureCookies?'; Secure':''}`;
  return createServer(async(req,res)=>{
@@ -23,6 +24,9 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
      const location=new URL(target,'https://local');
      res.writeHead(301,{'Location':location.pathname+location.search+location.hash,'Cache-Control':'public, max-age=3600'});return res.end();
     }
+   }
+   if(req.method==='GET'&&path==='/api/zbrojownia/events'){
+    return json(200,demoMode?{state:'demo',events:[]}:await scheduleFeed());
    }
    const cookies=Object.fromEntries((req.headers.cookie||'').split(';').map(p=>p.trim().split('=')).filter(p=>p.length===2));
    const session=cookies.skaut_session?s.db.prepare('SELECT s.*,m.name,m.email,m.role FROM sessions s JOIN members m ON m.id=s.member_id WHERE s.token_hash=? AND s.expires_at>?').get(digest(cookies.skaut_session),now()):null;

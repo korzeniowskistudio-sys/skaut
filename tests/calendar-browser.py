@@ -11,6 +11,7 @@ with sync_playwright() as p:
     context=browser.new_context(viewport={'width':1487,'height':1058},timezone_id='America/New_York')
     page=context.new_page()
     errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
+    page.route('**/api/zbrojownia/events',lambda route:route.fulfill(json={'state':'demo','events':[]}))
     before=page.request.get(origin+'/api/events').json()
     page.goto(origin+'/kalendarz',wait_until='networkidle')
     expect(page.locator('.calendar-page')).to_be_visible()
