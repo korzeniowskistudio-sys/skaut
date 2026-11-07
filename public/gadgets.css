@@ -144,6 +144,16 @@
   margin-bottom: 22px;
 }
 .gadgets-research li a { display: block; width: fit-content; }
+.gadgets-card .gadget-add {
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  font-size: .875rem;
+}
+.basket-layout + .gadget-basket { margin-top: 48px; }
+.gadget-basket .total { flex-wrap: wrap; gap: 0 12px; }
+.gadget-basket .summary > p { margin-bottom: 20px; }
+.gadget-basket .basket-item > strong { white-space: nowrap; }
 
 @media (max-width: 1050px) {
   .gadgets-items--featured .gadgets-card { display: flex; }

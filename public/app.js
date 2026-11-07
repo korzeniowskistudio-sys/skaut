@@ -8,13 +8,34 @@ const mobileNavigation=initMobileNavigation();
 const topNavigation=initNavigation();
 let navigationIntent=0;
 let session={member:null,csrf:'',demoMode:false},routeNumber=0,authRegister=false,galleryCleanup=null,calendarCleanup=null,heroMotionCleanup=null;
-let basket=[];try{basket=JSON.parse(localStorage.getItem('skaut-basket')||'[]');if(!Array.isArray(basket)||basket.some(x=>typeof x!=='string'))basket=[];}catch{}
+function savedIds(key) {
+ try {
+  const ids = JSON.parse(localStorage.getItem(key) || '[]');
+  return Array.isArray(ids) && ids.every(id => typeof id === 'string') ? ids : [];
+ } catch { return []; }
+}
+let basket = savedIds('skaut-basket');
+let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
+const loadGadgets = () => import('./gadgets.js?v=20261107-gadget-basket');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
 async function api(path,method='GET',body){const res=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(method==='GET'?{}:{'X-CSRF-Token':session.csrf})},body:body?JSON.stringify(body):undefined});let data;try{data=await res.json();}catch{throw new Error('Serwer nie odpowiada poprawnie. Spróbuj ponownie.');}if(!res.ok)throw Object.assign(new Error(data.error),{status:res.status});if(data.csrf)session.csrf=data.csrf;return data;}
-function updateBasket(){const n=document.querySelector('#basket-count');n.textContent=basket.length;n.hidden=!basket.length;document.querySelector('.basket-link').setAttribute('aria-label',`Koszyk, wydarzenia: ${basket.length}`);try{localStorage.setItem('skaut-basket',JSON.stringify(basket));}catch{}}
+function updateBasket(){
+ const count = basket.length + gadgetBasket.length;
+ const badge = document.querySelector('#basket-count');
+ badge.textContent = count;
+ badge.hidden = !count;
+ const gadgetLabel = gadgetBasket.length ? `, gadżety: ${gadgetBasket.length}` : '';
+ document.querySelector('.basket-link').setAttribute('aria-label', `Koszyk, wydarzenia: ${basket.length}${gadgetLabel}`);
+ try { localStorage.setItem('skaut-basket', JSON.stringify(basket)); } catch {}
+}
 function mutateBasket(next){basket=next;checkoutKey=crypto.randomUUID();try{localStorage.setItem('skaut-checkout-key',checkoutKey);}catch{}updateBasket();}
+function mutateGadgetBasket(next) {
+ gadgetBasket = next;
+ try { localStorage.setItem('skaut-gadget-basket', JSON.stringify(gadgetBasket)); } catch {}
+ updateBasket();
+}
 async function go(url){const intent=++navigationIntent;routeNumber++;await pageMotion.leave();if(intent!==navigationIntent)return;history.pushState({},'',url);window.scrollTo({top:0,behavior:'instant'});await render();}
 async function openArchive(url){const intent=++navigationIntent;routeNumber++;await pageMotion.leave();if(intent===navigationIntent)location.assign(url);}
 document.addEventListener('click',e=>{if(e.defaultPrevented)return;const a=e.target.closest('a');if(!a||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button!==0||a.target||a.hasAttribute('download'))return;const url=new URL(a.href);if(url.origin!==location.origin||url.hash)return;if(!/\.[^/]+$/.test(url.pathname)){e.preventDefault();go(url.pathname+url.search);}else if(/^\/archiwum\/.+\.html$/.test(url.pathname)){e.preventDefault();openArchive(url.href);}});
@@ -73,9 +94,24 @@ async function memberPage(seq){if(!session.member){loginPage();return;}const me=
  on('#message-form','submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button');btn.disabled=true;try{await api('/messages','POST',Object.fromEntries(new FormData(e.target)));await render();toast('Wiadomość została wysłana.');}finally{btn.disabled=false;}});
  document.querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click',async()=>{b.disabled=true;try{await api('/bookings/'+b.dataset.cancel,'DELETE',{});await render();toast('Rezerwacja została anulowana.');}catch(e){toast(e.message);b.disabled=false;}}));}
 
-async function basketPage(seq){const events=await api('/events');if(seq!==routeNumber)return;const selected=basket.map(id=>events.find(e=>e.id===id));const total=selected.reduce((v,e)=>v+(e?.price||0),0);
- display(`${intro('Twój koszyk.','Wybierz swój kolejny krok. Sprawdź szczegóły przed rezerwacją.')}<section class="content">${basket.length?`<div class="basket-layout"><div>${basket.map((id,i)=>{const e=selected[i];return `<article class="basket-item"><div><h3>${e?esc(e.title):'Termin jest już niedostępny'}</h3>${e?`<p>${date(e.startsAt)} · ${time(e.startsAt)}</p><p>${esc(e.location)}</p><p>${money(e.price)}</p>`:'<p>Usuń ten termin i wybierz inne wydarzenie.</p>'}<button class="text-button remove-item" data-remove="${esc(id)}">Usuń z koszyka</button></div>${e?`<strong>${money(e.price)}</strong>`:''}</article>`;}).join('')}<p class="notice">${session.demoMode?'To rezerwacja demonstracyjna — nie jest zgłoszeniem do rzeczywistego klubu. ':''}Jedna pozycja rezerwuje jedno miejsce dla właściciela konta.</p><a href="/treningi" class="text-link">${icon('arrow-left')} Wybierz kolejny trening</a></div><aside class="summary"><h2>Podsumowanie</h2><p>Wydarzenia: ${basket.length}</p><div class="total"><span>Razem</span><span>${money(total)}</span></div><p>Zapisy przyjmujemy jako rezerwację wstępną. Miejsce potwierdza obsługa klubu. Rezerwacja wstępna wygasa po 48 godzinach.</p><p><small>Płatności online nie są aktywne. Nie pobieramy danych karty.</small></p><p id="checkout-error" class="notice error" hidden role="alert"></p>${session.member?`<button id="checkout" class="btn" ${selected.some(e=>!e)?'disabled':''}>Wyślij rezerwację ${icon('arrow-right')}</button>`:'<a class="btn" href="/moj-skaut?next=/koszyk">Zaloguj się i zarezerwuj</a>'}</aside></div>`:empty('Jeszcze tu pusto','Wybierz trening lub wydarzenie i dodaj je do koszyka.')}${!basket.length?'<p><a class="btn" href="/treningi">Znajdź trening</a></p>':''}</section>`,'Koszyk');
+async function basketPage(seq){
+ const [events, catalogue] = await Promise.all([
+  basket.length ? api('/events') : [],
+  gadgetBasket.length ? loadGadgets() : null,
+ ]);
+ if (seq !== routeNumber) return;
+ const selected = basket.map(id => events.find(event => event.id === id));
+ const total = selected.reduce((sum, event) => sum + (event?.price || 0), 0);
+ const gadgets = catalogue?.gadgetsInBasket(gadgetBasket) ?? [];
+ if (gadgets.length !== gadgetBasket.length) mutateGadgetBasket(gadgets.map(item => item.id));
+ const gadgetSection = catalogue?.gadgetBasketMarkup(gadgets) ?? '';
+ display(`${intro('Twój koszyk.', gadgetSection ? 'Sprawdź wybrane pozycje.' : 'Wybierz swój kolejny krok. Sprawdź szczegóły przed rezerwacją.')}<section class="content">${basket.length?`<div class="basket-layout"><div>${basket.map((id,i)=>{const e=selected[i];return `<article class="basket-item"><div><h3>${e?esc(e.title):'Termin jest już niedostępny'}</h3>${e?`<p>${date(e.startsAt)} · ${time(e.startsAt)}</p><p>${esc(e.location)}</p><p>${money(e.price)}</p>`:'<p>Usuń ten termin i wybierz inne wydarzenie.</p>'}<button class="text-button remove-item" data-remove="${esc(id)}">Usuń z koszyka</button></div>${e?`<strong>${money(e.price)}</strong>`:''}</article>`;}).join('')}<p class="notice">${session.demoMode?'To rezerwacja demonstracyjna — nie jest zgłoszeniem do rzeczywistego klubu. ':''}Jedna pozycja rezerwuje jedno miejsce dla właściciela konta.</p><a href="/treningi" class="text-link">${icon('arrow-left')} Wybierz kolejny trening</a></div><aside class="summary"><h2>Podsumowanie treningów</h2><p>Wydarzenia: ${basket.length}</p><div class="total"><span>Razem</span><span>${money(total)}</span></div><p>Zapisy przyjmujemy jako rezerwację wstępną. Miejsce potwierdza obsługa klubu. Rezerwacja wstępna wygasa po 48 godzinach.</p><p><small>Płatności online nie są aktywne. Nie pobieramy danych karty.</small></p><p id="checkout-error" class="notice error" hidden role="alert"></p>${session.member?`<button id="checkout" class="btn" ${selected.some(e=>!e)?'disabled':''}>Wyślij rezerwację ${icon('arrow-right')}</button>`:'<a class="btn" href="/moj-skaut?next=/koszyk">Zaloguj się i zarezerwuj</a>'}</aside></div>`:gadgetSection?'':empty('Jeszcze tu pusto','Wybierz trening lub gadżet i dodaj go do koszyka.')}${!basket.length&&!gadgetSection?'<p><a class="btn" href="/treningi">Znajdź trening</a> <a class="btn secondary" href="/gadzety">Zobacz gadżety</a></p>':''}${gadgetSection}</section>`,'Koszyk');
  document.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click',()=>{mutateBasket(basket.filter(id=>id!==b.dataset.remove));render();}));
+ main.querySelectorAll('[data-gadget-remove]').forEach(button => button.addEventListener('click', async () => {
+  mutateGadgetBasket(gadgetBasket.filter(id => id !== button.dataset.gadgetRemove));
+  await render();
+  if (location.pathname === '/koszyk') (main.querySelector('#gadget-basket-title') ?? main).focus();
+ }));
  on('#checkout','click',async()=>{const btn=document.querySelector('#checkout');btn.disabled=true;try{if(!checkoutKey)mutateBasket([...basket]);await api('/checkout','POST',{events:basket,key:checkoutKey});mutateBasket([]);go('/moj-skaut?tab=harmonogram');toast('Rezerwacja wysłana. Oczekuje na potwierdzenie klubu.');}catch(e){const p=document.querySelector('#checkout-error');p.textContent=e.message;p.hidden=false;btn.disabled=false;}});}
 
 function clubPage(){display(`${intro('Skupienie. Sport. SKAUT.','Twój pierwszy krok na strzelnicy zaczyna się od dobrego przygotowania.')}<section class="image-story"><img ${campaignImageAttrs('/assets/campaign/photo-09-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-09-1100.webp" alt="Fotografia kampanijna SKAUT" width="835" height="520" decoding="async"><div class="copy"><h2>Znajdź swój<br>punkt startu.</h2><p>Wybierz trening dla początkujących, sprawdź opublikowane informacje i zarezerwuj swój termin.</p><a href="/treningi?type=pierwszy-raz" class="btn light">Pierwszy trening ${icon('arrow-up-right')}</a></div></section><section class="section prose"><h2>Informacje o klubie</h2><p>Klub Strzelecki SKAUT w Bielsku-Białej · ul. Piastowska 22, 43-300 Bielsko-Biała.</p><p><a href="mailto:zarzad@ksskaut.pl">zarzad@ksskaut.pl</a> · tel. <a href="tel:+48792792721">792 792 721</a></p><p>Informacje i dokumenty przeniesione z oficjalnej strony klubu 7 listopada 2026. Archiwalne publikacje zachowują swoje daty; ich treść nie jest potwierdzeniem aktualnej oferty.</p><ul><li><a href="/archiwum/zarzad.html">Struktura klubu i statut</a></li><li><a href="/archiwum/kontakt.html">Kontakt i dane klubu</a></li><li><a href="/archiwum/skladki-czlonkowskie-2022.html">Składki członkowskie</a></li><li><a href="/archiwum/licencje-zawodnicze-2027.html">Licencje zawodnicze 2027</a></li><li><a href="/archiwum/wyniki.html">Wyniki zawodów i komunikaty</a></li><li><a href="/galeria">Galeria imprez</a></li><li><a href="/archiwum/rodo.html">RODO — publikacja klubu</a></li><li><a href="/archiwum/polityka-cookies-ciasteczek.html">Polityka cookies — publikacja klubu</a></li><li><a href="/archiwum/index.html">Pełne archiwum: aktualności, dokumenty i wcześniejsze licencje</a></li></ul><h2>Masz już konto?</h2><p>W Mój SKAUT znajdziesz swoje treningi, wiadomości i postępy uzupełniane przez klub.</p><a href="/moj-skaut" class="btn">Otwórz Mój SKAUT</a></section>`,'Klub');}
@@ -101,8 +137,20 @@ async function adminPage(seq){if(!session.member){loginPage();return;}const data
 async function galleryPage(seq){const {renderGallery}=await import('./gallery.js?v=20261107-albums-calendar');if(seq!==routeNumber)return;document.title='Galeria — SKAUT';const cleanup=await renderGallery({main,isCurrent:()=>seq===routeNumber});if(seq===routeNumber)galleryCleanup=cleanup;else cleanup();}
 
 async function gadgetsPage(seq) {
- const {gadgetsMarkup} = await import('./gadgets.js?v=20261107-gadgets-logo');
- if (seq === routeNumber) display(gadgetsMarkup(), 'Gadżety klubowe');
+ const {gadgetsMarkup} = await loadGadgets();
+ if (seq !== routeNumber) return;
+ display(gadgetsMarkup(gadgetBasket), 'Gadżety klubowe');
+ main.querySelectorAll('[data-gadget-add]').forEach(button => button.addEventListener('click', () => {
+  const id = button.dataset.gadgetAdd;
+  if (gadgetBasket.includes(id)) {
+   go('/koszyk');
+   return;
+  }
+  mutateGadgetBasket([...gadgetBasket, id]);
+  button.textContent = 'W koszyku';
+  button.classList.add('secondary');
+  toast('Dodano gadżet do koszyka.');
+ }));
 }
 
 async function render(){const p=/^\/(?:gadgets|gadzety)\/?$/.test(location.pathname)?'/gadzety':location.pathname;mobileNavigation.update(p);const seq=++routeNumber;galleryCleanup?.();galleryCleanup=null;calendarCleanup?.();calendarCleanup=null;heroMotionCleanup?.();heroMotionCleanup=null;document.querySelector('#navigation').classList.remove('open');topNavigation.update();document.querySelector('#menu-toggle').setAttribute('aria-expanded','false');for(const a of document.querySelectorAll('#navigation a')){if(p.startsWith(new URL(a.href).pathname))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');}
