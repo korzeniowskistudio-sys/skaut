@@ -23,29 +23,11 @@
   overflow:hidden;
   pointer-events:none;
   opacity:.15;
-  background:rgb(150 150 150 / .12);
+  /* Black is neutral. Brighter smoke lifts shadows and dims highlights. */
+  mix-blend-mode:exclusion;
+  background:#000 url('/assets/home-smoke-still.webp') center bottom / cover no-repeat;
 }
 body:has(> #main > .hero) > .home-smoke{display:block}
-.home-smoke::before,.home-smoke::after{
-  content:'';
-  position:absolute;
-  inset:-14%;
-  background:url('/assets/home-smoke.svg') center / 100% 100% no-repeat;
-}
-.home-smoke::after{
-  background-size:135% 125%;
-  background-position:70% 24%;
-  opacity:.55;
-}
 @media(prefers-reduced-motion:no-preference){
-  .home-smoke::before{animation:smoke-drift 72s ease-in-out infinite alternate}
-  .home-smoke::after{animation:mist-rise 93s ease-in-out infinite alternate}
-}
-@keyframes smoke-drift{
-  from{transform:translate3d(-4%,4%,0)}
-  to{transform:translate3d(6%,-7%,0)}
-}
-@keyframes mist-rise{
-  from{transform:translate3d(5%,7%,0)}
-  to{transform:translate3d(-5%,-5%,0)}
+  .home-smoke{background-image:url('/assets/home-smoke-loop.webp')}
 }
