@@ -1,4 +1,4 @@
-import {t, english, locale, sitePath} from './i18n.js?v=20261107-zbrojownia';
+import {t, english, locale, sitePath} from './i18n.js?v=20261107-import';
 export const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const campaignImages=new Set(['/assets/hero.webp','/assets/range-front.webp','/assets/range-side.webp']);
 export function campaignImageAttrs(src,sizes){let stem;if(campaignImages.has(src))stem='/assets/optimized/'+src.slice('/assets/'.length,-'.webp'.length);else{const match=typeof src==='string'&&src.match(/^(\/assets\/campaign\/(?:photo-(?:0[1-9]|1[0-9])|licencja-klubowa-badge))-(?:360|720|1100)\.webp$/);if(!match)return '';stem=match[1];}return `srcset="${[360,720,1100].map(width=>`${stem}-${width}.webp ${width}w`).join(', ')}" sizes="${esc(sizes)}"`;}
@@ -13,23 +13,26 @@ const externalKinds={strzelba:t('Strzelba'),ipsc:'IPSC',szkolenia:t('Szkolenia')
 export const scheduleKinds=(events=[],selected='')=>({
  ...kinds,...Object.fromEntries(Object.entries(externalKinds).filter(([type])=>type===selected||events.some(event=>event.type===type))),
 });
-export const BOOKING_HOME='https://www.zbrojownia.ksskaut.pl/';
-export const BOOKING_ACCOUNT=BOOKING_HOME+'moje-konto/';
-const bookingUrl=value=>typeof value==='string'&&/^https:\/\/www\.zbrojownia\.ksskaut\.pl\/events\/[a-z0-9-]+\/$/.test(value)?value:BOOKING_HOME;
-export function externalBookingLink(url, label=t('Rezerwuj w Zbrojowni'), classes='btn') {
- return `<a class="${classes}" href="${bookingUrl(url)}" hreflang="pl" rel="noreferrer">${esc(label)} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`;
+export function importedEventLink(event, classes='btn') {
+ return `<a class="${classes}" href="${esc(sitePath(event.path))}">${t('Szczegóły wydarzenia')} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>`;
 }
-export function bookingNotice(state) {
+export function scheduleNotice(state) {
  if(!state||state==='demo')return '';
- const note=state==='unavailable'?t('Nie udało się pobrać terminów. Aktualną listę sprawdzisz w Zbrojowni.')
-  :state==='stale'?t('Lista może być nieaktualna. Sprawdź szczegóły w Zbrojowni.')
-  :t('Terminy pochodzą ze Zbrojowni. Tam sprawdzisz wolne miejsca, zarezerwujesz i opłacisz udział.');
- return `<aside class="booking-source" aria-label="${t('Rezerwacje w Zbrojowni')}"><div><strong>Zbrojownia</strong><p>${note}${english?' '+t('Zbrojownia jest dostępna po polsku.'):''}</p></div>${externalBookingLink(null,t('Otwórz Zbrojownię'),'btn secondary')}</aside>`;
+ return `<aside class="booking-source" aria-label="${t('Wydarzenia klubu')}">
+  <div><strong>${t('Wydarzenia klubu')}</strong><p>${t(state==='unavailable'?'Nie udało się wczytać harmonogramu.':'Sprawdź opisy, miejsca i opublikowane ceny.')}</p></div>
+  <a class="btn secondary" href="${esc(sitePath('/wydarzenia?period=all'))}">${t('Wszystkie wydarzenia')} <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+ </aside>`;
 }
-export function externalEventRow(event) {
+export function importedEventRow(event) {
  const kind=scheduleKinds([event])[event.type]||t('Trening');
  const start=new Date(event.startsAt);
- return `<article class="event-row external-event-row" data-zbrojownia-event><div class="event-date"><strong>${start.toLocaleDateString(locale,{day:'numeric',timeZone:'Europe/Warsaw'})}</strong>${start.toLocaleDateString(locale,{month:'short',timeZone:'Europe/Warsaw'})}</div><div><p class="event-kind">${trainingTypeIcon(event.type)} ${esc(kind)} <span class="booking-event-source">Zbrojownia</span></p><h3 lang="pl">${esc(event.title)}</h3><p><time datetime="${esc(event.startTime?event.startsAt:event.day)}">${event.startTime?esc(time(event.startsAt)):esc(date(event.startsAt))}</time>${event.location?' · '+esc(event.location):''}</p></div>${externalBookingLink(event.bookingUrl)}</article>`;
+ return `<article class="event-row imported-event-row" data-imported-event>
+  <div class="event-date"><strong>${start.toLocaleDateString(locale,{day:'numeric',timeZone:'Europe/Warsaw'})}</strong>${start.toLocaleDateString(locale,{month:'short',timeZone:'Europe/Warsaw'})}</div>
+  <div><p class="event-kind">${trainingTypeIcon(event.type)} ${esc(kind)}</p>
+  <h3 lang="pl">${esc(event.title)}</h3>
+  <p><time datetime="${esc(event.startTime?event.startsAt:event.day)}">${event.startTime?esc(time(event.startsAt)):esc(date(event.startsAt))}</time>${event.location?' · '+esc(event.location):''}${Number.isInteger(event.price)?' · '+(event.priceFrom?t('od')+' ':'')+esc(money(event.price)):''}</p></div>
+  ${importedEventLink(event)}
+ </article>`;
 }
 const disciplineOutlines={
  'pistolet':'M3 6.5h17.5v5H9.8L7.2 19H3l2.7-7.5H3z M9.8 11.5v2.7h3a2.2 2.2 0 0 0 2.2-2.2v-.5 M5 6.5V5m12.5 1.5V5',

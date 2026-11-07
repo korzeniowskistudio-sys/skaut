@@ -8,7 +8,7 @@ with sync_playwright() as p:
  browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'))
  page=browser.new_page(viewport={'width':390,'height':844},has_touch=True)
  errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
- page.route('**/api/zbrojownia/events',lambda route:route.fulfill(json={'state':'demo','events':[]}))
+ page.route('**/api/session',lambda route:route.fulfill(json={**route.fetch().json(),'demoMode':True}))
  page.route('**/api/events**',lambda route:route.fulfill(json=[]))
  page.goto(origin+'/treningi',wait_until='networkidle')
  expect(page.locator('[data-sample-training]')).to_have_count(10)

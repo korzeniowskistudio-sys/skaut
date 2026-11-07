@@ -1,10 +1,10 @@
-import {englishText, englishNews} from './english.js?v=20261107-zbrojownia';
+import {englishText, englishNews} from './english.js?v=20261107-import';
 
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],
   ['/aktualnosci','/news'], ['/galeria','/gallery'], ['/gadzety','/gadgets'],
   ['/moj-skaut','/my-skaut'], ['/koszyk','/basket'], ['/informacje','/about'],
-  ['/admin','/admin'],
+  ['/admin','/admin'], ['/wydarzenia','/events'], ['/sklep','/shop'],
 ]);
 const englishToPolish = new Map([...polishToEnglish].map(([pl,en]) => [en,pl]));
 const englishPrefix = /^\/en(?:\/|$)/;

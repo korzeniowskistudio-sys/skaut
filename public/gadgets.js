@@ -1,4 +1,4 @@
-import {t} from './i18n.js?v=20261107-english';
+import {t} from './i18n.js?v=20261107-import';
 import {rangeGameMarkup} from './range-game.js?v=20261107-english';
 
 // Positions follow the 3 × 2 studio contact sheets.
@@ -109,6 +109,10 @@ export function gadgetsMarkup(basket = []) {
         <div><p class="gadgets-kicker">${t("Kolekcja klubowa")}</p><h1 id="gadgets-title">${t("Gadżety SKAUT.")}</h1></div>
         <p>${gadgets.length} ${t("pomysłów na klubowe wyposażenie. Ceny są orientacyjne. Dodaj gadżety do koszyka, by zapisać swój wybór.")}</p>
       </header>
+      <aside class="booking-source">
+        <div><strong>${t('Sklep klubowy')}</strong><p>${t('Oryginalna odzież i gadżety SKAUT.')}</p></div>
+        <a class="btn secondary" href="/sklep">${t('Zobacz sklep klubowy')}</a>
+      </aside>
       <section class="gadgets-group" aria-labelledby="gadgets-featured">
         <h2 id="gadgets-featured">${t("Torba i bluza")}</h2>
         <div class="gadgets-items gadgets-items--featured">${[0, 1].map(i => card(i, basket, true)).join('')}</div>

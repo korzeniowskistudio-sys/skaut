@@ -1,8 +1,30 @@
 .booking-source{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 24px;padding:16px 20px;margin:0 0 24px;border:1px solid #cbd2db;background:#f1f4f8}
 .booking-source strong{color:var(--navy)}
 .booking-source p{margin:4px 0 0;font-size:14px;max-width:65ch}
-.booking-source .btn,.external-event-row .btn{min-height:44px;white-space:normal}
-.booking-event-source{border:1px solid #cbd2db;padding:1px 6px;font-size:11px;font-weight:600}
-.external-event-row h3{overflow-wrap:anywhere}
+.booking-source .btn,.imported-event-row .btn{min-height:44px;white-space:normal}
+.imported-event-row h3{overflow-wrap:anywhere}
 .calendar-event-location{display:block}
 @media(max-width:450px){.booking-source{padding:14px 16px}}
+
+.imported-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
+.imported-language{font-size:.9rem;color:var(--muted)}
+.imported-events,.imported-options ul{list-style:none;margin:0 0 24px;padding:0}
+.imported-events a{display:grid;grid-template-columns:10rem minmax(0,1fr) 8rem auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #cbd2db;text-decoration:none}
+.imported-events a:hover strong{text-decoration:underline}
+.imported-events time,.imported-events span{font-size:.85rem}
+.imported-products .news-item img{object-fit:contain;background:var(--soft)}
+.imported-documents,.imported-options{margin-top:48px}
+.imported-options li{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid #cbd2db}
+.imported-options li p{margin:4px 0 0}
+.imported-options li b{white-space:nowrap}
+.imported-tag{font-size:.85rem;color:var(--muted);margin-bottom:0}
+.imported-pictures img,.imported-body img{display:block;max-width:100%;height:auto;max-height:34rem;object-fit:contain;margin:20px auto}
+.imported-body table{display:block;overflow-x:auto;max-width:100%}
+.imported-content :is(h1,h2,strong,a){overflow-wrap:anywhere}
+@media(max-width:680px){
+  .imported-filters{grid-template-columns:1fr 1fr;gap:10px}
+  .imported-filters .field:first-child{grid-column:1/-1}
+  .imported-events a{grid-template-columns:minmax(0,1fr) auto;gap:4px 10px}
+  .imported-events a strong{grid-column:1/-1;grid-row:2}
+  .imported-events a i{grid-column:2;grid-row:1}
+}
