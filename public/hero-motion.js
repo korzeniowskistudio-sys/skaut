@@ -1,6 +1,5 @@
 const HOLD = 5000;
 const BURST = 2050;
-const PAUSE_KEY = 'skaut-hero-motion-paused';
 
 const vertex = `
  attribute vec2 aPosition;
@@ -18,6 +17,7 @@ const fragment = `
  uniform vec4 uCrop;
  uniform vec2 uBlink;
  uniform vec4 uMotion;
+ uniform float uRearSlide;
  const vec2 plate = vec2(1672.0, 941.0);
 
  float weight(vec2 p, vec2 center, vec2 radius) {
@@ -49,23 +49,34 @@ const fragment = `
 
  vec4 over(vec4 top, vec4 bottom) { return top + bottom * (1.0 - top.a); }
 
+ vec2 rearSample(vec2 p) {
+   // Taper the sideways shift along the woman's hair, ear protection and shoulder.
+   float foregroundEdge = 996.0 + 80.0 * smoothstep(130.0, 367.0, p.y);
+   float shoulderTop = 555.0 + 115.0 * smoothstep(1270.0, 1430.0, p.x);
+   float blend = smoothstep(foregroundEdge, foregroundEdge + 52.0, p.x)
+     * (1.0 - smoothstep(1460.0, 1545.0, p.x))
+     * (1.0 - smoothstep(shoulderTop - 36.0, shoulderTop, p.y));
+   return p + vec2(20.0 * uRearSlide * blend, 0.0);
+ }
+
  void main() {
    vec2 p = (uCrop.xy + vPoint * uCrop.zw) * plate;
-   vec2 q = p;
+   vec2 rear = rearSample(p);
+   vec2 q = rear;
    q += uMotion.x * (
      vec2(-4.1, 1.6) * weight(p, vec2(572.0, 145.0), vec2(142.0, 128.0)) +
      vec2(-3.3, 0.9) * weight(p, vec2(936.0, 77.0), vec2(104.0, 97.0)) +
      vec2(3.7, -1.2) * weight(p, vec2(1003.0, 553.0), vec2(57.0, 91.0)));
    q += uMotion.y * vec2(-0.9, 3.5) * weight(p, vec2(1170.0, 716.0), vec2(241.0, 159.0));
    q += uMotion.z * vec2(-4.6, 2.8) * weight(p, vec2(660.0, 774.0), vec2(220.0, 208.0));
-   q += uMotion.w * vec2(4.0, 2.5) * weight(p, vec2(1350.0, 485.0), vec2(139.0, 143.0));
+   q += uMotion.w * vec2(4.0, 2.5) * weight(rear, vec2(1350.0, 485.0), vec2(139.0, 143.0));
    float opacity = smoothstep(0.035, 0.62, length(q - p));
    vec3 color = texture2D(uPhoto, q / plate).rgb;
    vec4 frame = vec4(color * opacity, opacity);
    frame = over(lid(p, vec2(705.0, 404.5), 47.0, -0.045, vec2(14.5, 10.5), uBlink.x), frame);
    frame = over(lid(p, vec2(878.0, 387.0), 49.0, -0.32, vec2(14.4, 12.0), uBlink.x), frame);
-   frame = over(lid(p, vec2(1076.0, 252.0), 29.0, 0.04, vec2(7.0, 6.0), uBlink.y * 0.62), frame);
-   frame = over(lid(p, vec2(1207.0, 251.0), 35.0, 0.055, vec2(8.5, 7.0), uBlink.y), frame);
+   frame = over(lid(rear, vec2(1076.0, 252.0), 29.0, 0.04, vec2(7.0, 6.0), uBlink.y * 0.62), frame);
+   frame = over(lid(rear, vec2(1207.0, 251.0), 35.0, 0.055, vec2(8.5, 7.0), uBlink.y), frame);
    gl_FragColor = frame;
  }`;
 
@@ -111,6 +122,7 @@ function renderer(image) {
   const crop = gl.getUniformLocation(program, 'uCrop');
   const blink = gl.getUniformLocation(program, 'uBlink');
   const motion = gl.getUniformLocation(program, 'uMotion');
+  const rearSlide = gl.getUniformLocation(program, 'uRearSlide');
   let source = '';
 
   function fit() {
@@ -138,9 +150,10 @@ function renderer(image) {
   image.after(canvas);
   return {
     canvas, fit,
-    draw(eyes, values) {
+    draw(eyes, values, slide) {
       gl.uniform2fv(blink, eyes);
       gl.uniform4fv(motion, values);
+      gl.uniform1f(rearSlide, slide);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       canvas.hidden = false;
     },
@@ -165,18 +178,9 @@ export function mountHeroMotion(image) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const events = new AbortController();
   const options = {signal: events.signal};
-  let visible = false, frozen = false, paused = false, disposed = false;
+  let visible = false, frozen = false, disposed = false;
   let remaining = HOLD, deadline = 0, timer = 0, frame = 0, running = false;
   let painter, dirty = true, sequence = 0;
-  try { paused = localStorage.getItem(PAUSE_KEY) === '1'; } catch {}
-
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'hero-motion-toggle';
-  const icon = document.createElement('i');
-  icon.setAttribute('aria-hidden', 'true');
-  button.append(icon);
-  hero.append(button);
 
   function stop() {
     if (timer) {
@@ -190,15 +194,10 @@ export function mountHeroMotion(image) {
     if (painter) painter.canvas.hidden = true;
   }
 
-  const eligible = () => !disposed && visible && !frozen && !paused && !reduced.matches && !document.hidden
+  const eligible = () => !disposed && visible && !frozen && !reduced.matches && !document.hidden
     && image.isConnected && image.complete && image.naturalWidth > 0 && !hero.closest('[inert]');
 
   function sync() {
-    button.hidden = reduced.matches;
-    const label = paused ? 'Włącz animację zdjęcia' : 'Wstrzymaj animację zdjęcia';
-    button.setAttribute('aria-label', label);
-    button.title = label;
-    icon.className = `ph ph-${paused ? 'play' : 'pause'}`;
     if (!eligible()) { stop(); return; }
     if (!timer && !running) {
       deadline = performance.now() + remaining;
@@ -238,6 +237,7 @@ export function mountHeroMotion(image) {
             [rear ? 0 : blinkAt(t, 610), rear ? blinkAt(t, 850) : 0],
             [pulse(t, 80, 1800) * (rear ? -0.42 : 1), pulse(t, 240, 1720) * (rear ? 0.32 : 1),
              rear ? 0 : pulse(t, 440, 1370), rear ? pulse(t, 230, 1530) : 0],
+            rear ? pulse(t, 110, 1790) : 0,
           );
         } catch { dispose(); return; }
       }
@@ -255,11 +255,6 @@ export function mountHeroMotion(image) {
   viewport.observe(hero);
   size.observe(image);
   menu.observe(hero.closest('main') || hero, {attributes: true, attributeFilter: ['inert']});
-  button.addEventListener('click', () => {
-    paused = !paused;
-    try { localStorage.setItem(PAUSE_KEY, paused ? '1' : '0'); } catch {}
-    sync();
-  }, options);
   image.addEventListener('load', () => { dirty = true; sync(); }, options);
   document.addEventListener('visibilitychange', sync, options);
   reduced.addEventListener('change', sync, options);
@@ -275,7 +270,6 @@ export function mountHeroMotion(image) {
     size.disconnect();
     menu.disconnect();
     painter?.dispose();
-    button.remove();
   }
   return dispose;
 }

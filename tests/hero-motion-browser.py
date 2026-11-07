@@ -1,4 +1,4 @@
-"""Check the timed hero effect and its controls in a real browser."""
+"""Check the timed hero effect and its lifecycle in a real browser."""
 import os
 from playwright.sync_api import expect, sync_playwright
 
@@ -11,12 +11,12 @@ with sync_playwright() as p:
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.add_init_script('''
-      window.heroFrames = {loaded: 0, first: 0, eyes: [0, 0], frames: 0};
+      window.heroFrames = {loaded: 0, first: 0, eyes: [0, 0], slide: 0, frames: 0};
       document.addEventListener('load', e => {
         if (e.target.matches?.('.hero-photo > img')) heroFrames.loaded = performance.now();
       }, true);
       const proto = WebGLRenderingContext.prototype;
-      const draw = proto.drawArrays, eyes = proto.uniform2fv;
+      const draw = proto.drawArrays, eyes = proto.uniform2fv, slide = proto.uniform1f;
       proto.uniform2fv = function (location, values) {
         if (this.canvas.classList.contains('hero-motion-layer')) {
           values.forEach((value, i) => { heroFrames.eyes[i] = Math.max(heroFrames.eyes[i], value); });
@@ -30,13 +30,17 @@ with sync_playwright() as p:
         }
         return draw.apply(this, arguments);
       };
+      proto.uniform1f = function (location, value) {
+        if (this.canvas.classList.contains('hero-motion-layer')) {
+          heroFrames.slide = Math.max(heroFrames.slide, value);
+        }
+        return slide.apply(this, arguments);
+      };
     ''')
     page.goto(origin + '/')
     photo = page.locator('.hero-photo > img')
     layer = page.locator('.hero-motion-layer')
-    pause = page.get_by_role('button', name='Wstrzymaj animację zdjęcia')
     expect(photo).to_be_visible()
-    expect(pause).to_be_visible()
     assert photo.evaluate('img => img.getAnimations().length === 0')
     expect(layer).to_have_count(0)
     page.wait_for_function('() => heroFrames.eyes[0] > .7', timeout=10_000)
@@ -50,13 +54,12 @@ with sync_playwright() as p:
     page.wait_for_timeout(200)
     assert page.evaluate('() => heroFrames.frames') == frame_count
     page.evaluate("() => window.scrollTo({top:0,behavior:'instant'})")
-    page.wait_for_function('() => heroFrames.eyes[1] > .7', timeout=10_000)
-    pause.click()
-    expect(layer).not_to_be_visible()
-    expect(page.get_by_role('button', name='Włącz animację zdjęcia')).to_be_visible()
+    page.wait_for_function('() => heroFrames.eyes[1] > .7 && heroFrames.slide > .9', timeout=10_000)
+    expect(layer).to_be_visible()
+    expect(page.locator('.hero-motion-toggle')).to_have_count(0)
 
     page.emulate_media(reduced_motion='reduce')
-    expect(page.locator('.hero-motion-toggle')).not_to_be_visible()
+    expect(layer).not_to_be_visible()
     expect(photo).to_be_visible()
     page.locator('#navigation a[href="/klub"]').click()
     expect(layer).to_have_count(0)
@@ -65,4 +68,4 @@ with sync_playwright() as p:
     expect(layer).to_have_count(0)
     assert not errors, errors
     browser.close()
-    print('Hero motion passed: five-second hold, both blinks, offscreen stop, pause, reduced motion and route cleanup.')
+    print('Hero motion passed: five-second hold, both blinks, rear slide, offscreen stop, reduced motion and route cleanup.')
