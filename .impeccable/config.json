@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "public/archive.css"
+        ],
+        "createdAt": "2026-11-07T00:03:50.378Z",
+        "reason": "Agent review: archive.css line 8 targets semantic blockquote quotations only; its 3px rule is an intentional quotation marker, not an accent on a card."
+      }
+    ]
+  }
+}
