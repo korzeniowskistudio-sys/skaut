@@ -1,5 +1,6 @@
 const ASSETS = '/assets/range-game/';
-const ROUND_SECONDS = 30;
+const STAGE_SECONDS = 30;
+const STAGE_TWO_SCORE = 500;
 const INTRO_MS = 2050;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const between = (min, max) => min + Math.random() * (max - min);
@@ -12,13 +13,14 @@ export function rangeGameMarkup() {
     <div class="range-hud">
       <p class="range-hud-label">SKAUT <span>·</span> Strefa gry</p>
       <div class="range-readouts" data-range-readouts hidden>
+        <div class="range-stat" role="status"><span>Etap</span><strong data-range-stage>1 / 2</strong></div>
         <div class="range-stat"><span>Czas</span><strong data-range-time>30 s</strong></div>
         <div class="range-stat range-stat--score" role="status"><span>Wynik</span><strong data-range-score>0000</strong></div>
       </div>
     </div>
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">Ruchome tarcze.</h2>
-      <p data-range-message>30 sekund. Celuj myszą i kliknij, by oddać strzał. Na telefonie dotknij tarczy.</p>
+      <p data-range-message>Każdy etap trwa ${STAGE_SECONDS} sekund. Zdobądź ${STAGE_TWO_SCORE} pkt, aby odblokować etap 2. Celuj myszą i kliknij albo dotknij tarczy.</p>
       <button type="button" class="btn light range-play" data-range-play hidden>Graj</button>
       <button type="button" class="range-utility" data-range-skip>Pomiń intro</button>
     </div>
@@ -27,30 +29,33 @@ export function rangeGameMarkup() {
   </section>`;
 }
 
-function newTarget(at) {
+function newTarget(at, stage) {
+  const easy = stage === 1;
   const direction = Math.random() < .5 ? -1 : 1;
   return {
     born: at,
-    life: between(1.85, 3.1),
+    life: easy ? between(3.1, 4.2) : between(1.85, 3.1),
     x: between(.12, .88),
     y: between(.23, .51),
-    velocity: direction * between(.095, .23),
+    velocity: direction * between(.095, .23) * (easy ? .45 : 1),
     wave: between(0, Math.PI * 2),
-    drift: between(.025, .075),
-    size: between(.84, 1.15),
+    drift: between(.025, .075) * (easy ? .55 : 1),
+    size: between(.84, 1.15) * (easy ? 1.45 : 1),
   };
 }
 
 function targetPose(target, elapsed, width, height) {
   const age = elapsed - target.born;
   const x = target.x + target.velocity * age;
+  const radius = clamp(width * .025, 17, 30) * target.size;
+  const edge = Math.max(.08, (radius + 2) / width);
   // Bounce inside the lane so even the quickest targets stay reachable.
-  const lane = .84;
-  const wrapped = ((x - .08) % (lane * 2) + lane * 2) % (lane * 2);
+  const lane = 1 - edge * 2;
+  const wrapped = ((x - edge) % (lane * 2) + lane * 2) % (lane * 2);
   return {
-    x: (.08 + Math.min(wrapped, lane * 2 - wrapped)) * width,
+    x: (edge + Math.min(wrapped, lane * 2 - wrapped)) * width,
     y: (target.y + Math.sin(age * 3.1 + target.wave) * target.drift) * height,
-    radius: clamp(width * .025, 17, 30) * target.size,
+    radius,
     opacity: Math.min(1, age / .13, (target.life - age) / .2),
   };
 }
@@ -70,6 +75,7 @@ export function mountRangeGame(root) {
   const skip = root.querySelector('[data-range-skip]');
   const pause = root.querySelector('[data-range-pause]');
   const readouts = root.querySelector('[data-range-readouts]');
+  const stageValue = root.querySelector('[data-range-stage]');
   const scoreValue = root.querySelector('[data-range-score]');
   const timeValue = root.querySelector('[data-range-time]');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -84,6 +90,7 @@ export function mountRangeGame(root) {
   let width = 1;
   let height = 1;
   let density = 1;
+  let stage = 1;
   let elapsed = 0;
   let lastFrame = 0;
   let nextTarget = 0;
@@ -135,7 +142,8 @@ export function mountRangeGame(root) {
       ready(true);
       return;
     }
-    intro.src = ASSETS + 'turn-intro.webp';
+    // A fresh image identity restarts the one-shot animation on every visit.
+    intro.src = ASSETS + 'turn-intro.webp?play=' + crypto.randomUUID();
     arena.before(intro);
     introTimer = setTimeout(() => ready(true), 3500);
     intro.decode().then(() => {
@@ -234,7 +242,9 @@ export function mountRangeGame(root) {
   }
 
   function updateReadouts() {
-    const time = Math.max(0, Math.ceil(ROUND_SECONDS - elapsed)) + ' s';
+    const stageLabel = stage + ' / 2';
+    if (stageValue.textContent !== stageLabel) stageValue.textContent = stageLabel;
+    const time = Math.max(0, Math.ceil(STAGE_SECONDS - elapsed)) + ' s';
     if (timeValue.textContent !== time) timeValue.textContent = time;
     const formatted = String(score).padStart(4, '0');
     if (scoreValue.textContent !== formatted) scoreValue.textContent = formatted;
@@ -248,8 +258,11 @@ export function mountRangeGame(root) {
   function finish() {
     stopFrame();
     setPhase('finished');
-    title.textContent = 'Koniec rundy.';
-    message.textContent = `Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
+    title.textContent = 'Koniec gry.';
+    const result = `Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
+    message.textContent = stage === 1
+      ? `${result} Etap 2 odblokujesz po zdobyciu ${STAGE_TWO_SCORE} pkt.`
+      : result;
     play.textContent = 'Zagraj ponownie';
     updateReadouts();
     paint();
@@ -260,13 +273,13 @@ export function mountRangeGame(root) {
     if (phase !== 'playing') return;
     const dt = clamp((now - lastFrame) / 1000, 0, .08);
     lastFrame = now;
-    elapsed = Math.min(ROUND_SECONDS, elapsed + dt);
-    if (elapsed >= ROUND_SECONDS) {
+    elapsed = Math.min(STAGE_SECONDS, elapsed + dt);
+    if (elapsed >= STAGE_SECONDS) {
       finish();
       return;
     }
     if (elapsed >= nextTarget) {
-      targets.push(newTarget(elapsed));
+      targets.push(newTarget(elapsed, stage));
       nextTarget = elapsed + between(.52, .95);
     }
     targets = targets.filter(target => elapsed - target.born < target.life);
@@ -279,14 +292,22 @@ export function mountRangeGame(root) {
     frame = requestAnimationFrame(tick);
   }
 
+  function startStage(number) {
+    stage = number;
+    elapsed = 0;
+    lastShot = -1;
+    nextTarget = between(.45, .7);
+    targets = [newTarget(0, stage)];
+    feedback = [];
+    lastFrame = performance.now();
+    updateReadouts();
+  }
+
   function start() {
     if (phase === 'playing' || phase === 'intro' || !context) return;
     if (phase !== 'paused') {
-      elapsed = score = shots = hits = 0;
-      lastShot = -1;
-      nextTarget = between(.45, .7);
-      targets = [newTarget(0)];
-      feedback = [];
+      score = shots = hits = 0;
+      startStage(1);
       aim = {x: .5, y: .4};
       pose = {...aim};
     }
@@ -329,7 +350,8 @@ export function mountRangeGame(root) {
       score += points;
       targets.splice(index, 1);
       feedback.push({x: target.x / width, y: target.y / height, points, born: elapsed});
-      updateReadouts();
+      if (stage === 1 && score >= STAGE_TWO_SCORE) startStage(2);
+      else updateReadouts();
       break;
     }
   }
