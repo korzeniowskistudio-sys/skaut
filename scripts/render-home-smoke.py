@@ -1,131 +1,169 @@
 #!/usr/bin/env python3
-"""Render the original SKAUT smoke loop. Requires NumPy and Pillow with WebP support."""
+"""Render the SKAUT smoke plate. Requires NumPy and Pillow with WebP support."""
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageFilter
 
 
-WIDTH, HEIGHT = 576, 324
+DEPTH, HEIGHT, WIDTH = 44, 93, 156
 FPS, SECONDS, OVERLAP = 15, 20, 4
 PLAYBACK_RATE = 1.25
-DT = 1 / FPS
-Y, X = np.mgrid[:HEIGHT, :WIDTH].astype(np.float32)
+DT = np.float32(1 / FPS)
+Z, Y, X = (axis.astype(np.float32) for axis in np.ogrid[:DEPTH, :HEIGHT, :WIDTH])
+SHAPE = DEPTH, HEIGHT, WIDTH
 ASSETS = Path(__file__).resolve().parents[1] / 'public' / 'assets'
 
 
-def turbulence(seed):
+def noise(seed, scale):
+    """A smooth 3D noise field with a chosen correlation length in voxels."""
     rng = np.random.default_rng(seed)
-    field = np.zeros_like(X)
-    for scale, strength in [(1, .46), (2, .27), (4, .15), (8, .08), (16, .04)]:
-        grid = rng.random((5 * scale, 9 * scale), dtype=np.float32)
-        detail = Image.fromarray(grid).resize((WIDTH, HEIGHT), Image.Resampling.BICUBIC)
-        field += strength * np.asarray(detail)
-    return field
+    spectrum = np.fft.rfftn(rng.standard_normal(SHAPE, dtype=np.float32))
+    frequencies = [
+        np.fft.fftfreq(DEPTH)[:, None, None],
+        np.fft.fftfreq(HEIGHT)[None, :, None],
+        np.fft.rfftfreq(WIDTH)[None, None, :],
+    ]
+    lowpass = np.exp(-2 * (np.pi * scale) ** 2 * sum(f * f for f in frequencies))
+    field = np.fft.irfftn(spectrum * lowpass, s=SHAPE, axes=(0, 1, 2)).astype(np.float32)
+    return field / field.std()
 
 
-def sample(field, x, y):
-    """Bilinear backtrace. Air at the top is clear; smoke can enter along the sides."""
-    inside = y >= 0
+def curl(seed, scale):
+    """Curl of a vector potential. The small eddies stir without expanding the air."""
+    a, b, c = (noise(seed + index, scale) for index in range(3))
+    az, ay, ax = np.gradient(a)
+    bz, by, bx = np.gradient(b)
+    cz, cy, cx = np.gradient(c)
+    return cy - bz, az - cx, bx - ay
+
+
+def trilinear(volume, x, y, z, *, bounds=False):
+    """Trace into the previous density volume with clear air outside the box."""
+    inside = (x >= 0) & (x < WIDTH - 1) & (y >= 0) & (y < HEIGHT - 1) & (z >= 0) & (z < DEPTH - 1)
     x = np.clip(x, 0, WIDTH - 1.001)
     y = np.clip(y, 0, HEIGHT - 1.001)
-    ix, iy = x.astype(np.int32), y.astype(np.int32)
-    fx, fy = x - ix, y - iy
-    top = (1 - fx) * field[iy, ix] + fx * field[iy, ix + 1]
-    bottom = (1 - fx) * field[iy + 1, ix] + fx * field[iy + 1, ix + 1]
-    return (inside * ((1 - fy) * top + fy * bottom)).astype(np.float32)
+    z = np.clip(z, 0, DEPTH - 1.001)
+    ix, iy, iz = (coord.astype(np.int32) for coord in (x, y, z))
+    fx, fy, fz = (coord - base.astype(np.float32) for coord, base in ((x, ix), (y, iy), (z, iz)))
+    stride = HEIGHT * WIDTH
+    index = iz * stride + iy * WIDTH + ix
+    data = volume.reshape(-1)
+
+    def xy(offset):
+        origin = index + offset
+        a, b, c, d = (data[origin + n] for n in (0, 1, WIDTH, WIDTH + 1))
+        value = (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy
+        if not bounds:
+            return value
+        return value, np.minimum(np.minimum(a, b), np.minimum(c, d)), np.maximum(np.maximum(a, b), np.maximum(c, d))
+
+    if not bounds:
+        return inside * (xy(0) * (1 - fz) + xy(stride) * fz)
+    front, front_min, front_max = xy(0)
+    back, back_min, back_max = xy(stride)
+    return (inside * (front * (1 - fz) + back * fz),
+            inside * np.minimum(front_min, back_min), inside * np.maximum(front_max, back_max))
 
 
-class SmokePlane:
-    def __init__(self, seed, emitters, vortices, rise, decay):
-        self.density = np.zeros_like(X)
-        self.emitters = emitters
-        self.vortices = vortices
-        self.rise = rise
-        self.decay = decay
-        self.texture = turbulence(seed)
-        self.secondary_texture = turbulence(seed + 37) - .5
-        # The perpendicular gradient adds small eddies to the broad rolling flow.
-        gy, gx = np.gradient(self.texture)
-        self.eddy_x, self.eddy_y = gy * 825, -gx * 825
+# Vary the sources in all three axes so individual plumes can occlude one another.
+SOURCES = (
+    (15, 8, 12, 17, 6, 6, .48, .00),
+    (47, 4, 24, 11, 6, 7, .93, 1.64),
+    (66, 13, 32, 10, 6, 5, .46, 2.86),
+    (87, 9, 15, 19, 7, 8, .49, 3.91),
+    (114, 4, 27, 12, 5, 7, .91, .42),
+    (146, 13, 23, 14, 9, 8, .79, 2.45),
+)
+# Each moving vortex rotates around a different axis.
+VORTICES = (
+    (27, 30, 17, 25, .31, .33, .55, .0),
+    (62, 34, 25, 21, .35, -.36, -.22, 1.6),
+    (103, 30, 16, 28, -.27, .12, .43, 2.4),
+    (134, 43, 27, 25, .26, -.26, -.38, 4.2),
+)
+
+
+class SmokeVolume:
+    def __init__(self):
+        self.density = np.zeros(SHAPE, dtype=np.float32)
+        broad = curl(21, 5.2)
+        detail = curl(37, 1.9)
+        self.wind = tuple(coarse * 7 + fine * 1.65 for coarse, fine in zip(broad, detail))
+        self.gust = curl(52, 3.7)
+        self.source_grain = np.clip(1 + .34 * noise(68, 2.3) + .18 * noise(97, .9), .16, 2.0)
+        self.filaments = np.clip(1 + .14 * noise(103, 1.15) + .08 * noise(109, .6), .55, 1.45)
+        self.boundary = np.minimum(Z, DEPTH - 1 - Z) / 5
+        self.boundary = np.minimum(self.boundary, 1).astype(np.float32)
 
     def step(self, time):
-        wind_x = 8.0 + 9.5 * (0.6 - Y / HEIGHT) + self.eddy_x * np.cos(.21 * time)
-        wind_y = -self.rise + self.eddy_y * np.cos(.21 * time)
-        for cx, cy, radius, turn, phase in self.vortices:
-            dx = X - cx - 26 * np.sin(time * .15 + phase)
-            dy = Y - cy - 19 * np.cos(time * .17 + phase)
-            spin = turn * np.exp(-(dx * dx + dy * dy) / (radius * radius))
-            wind_x -= dy * spin
-            wind_y += dx * spin
-
-        smoke = sample(self.density, X - DT * wind_x, Y - DT * wind_y)
-        smoke *= self.decay
-        # Each source releases uneven puffs rather than a steady stripe.
-        grain = self.texture + .56 * np.sin(.24 * time) * self.secondary_texture
-        for cx, cy, width, height, strength, phase in self.emitters:
-            dx = (X - cx - 28 * np.sin(time * .29 + phase)) / width
-            dy = (Y - cy - 12 * np.sin(time * .37 + phase)) / height
-            puff = .17 + .83 * (.52 + .48 * np.sin(time * .53 + phase)) ** 2
-            smoke += DT * strength * puff * np.exp(-(dx * dx + dy * dy)) * (.05 + 2.0 * grain)
+        gust = 3.2 * np.sin(time * .29)
+        vx = self.wind[0] + gust * self.gust[0] + (4.3 + .9 * np.sin(time * .25)) + .021 * Y
+        vy = self.wind[1] + gust * self.gust[1] + 2.0 + 1.9 * self.density / (self.density + .18)
+        vz = self.wind[2] + gust * self.gust[2]
+        for x, y, z, radius, spin_x, spin_y, spin_z, phase in VORTICES:
+            dx = X - (x + 8 * np.sin(time * .18 + phase))
+            dy = Y - (y + 6 * np.cos(time * .24 + phase))
+            dz = Z - (z + 5 * np.sin(time * .17 + phase))
+            swirl = np.exp(-(dx * dx + dy * dy + dz * dz) / (radius * radius))
+            vx += swirl * (spin_y * dz - spin_z * dy)
+            vy += swirl * (spin_z * dx - spin_x * dz)
+            vz += swirl * (spin_x * dy - spin_y * dx)
+        dx, dy, dz = DT * vx, DT * vy, DT * vz
+        smoke, lowest, highest = trilinear(self.density, X - dx, Y - dy, Z - dz, bounds=True)
+        restored = trilinear(smoke, X + dx, Y + dy, Z + dz)
+        # Correct some of the interpolation blur while keeping density within
+        # the original sample range. This preserves thin, curling tendrils.
+        smoke = np.clip(smoke + .41 * (self.density - restored), lowest, highest)
+        smoke *= .991 * (.96 + .04 * self.boundary)
+        for x, y, z, sx, sy, sz, power, phase in SOURCES:
+            dx = (X - x - 10 * np.sin(time * .36 + phase)) / sx
+            dy = (Y - y - 3 * np.cos(time * .29 + phase)) / sy
+            dz = (Z - z - 4 * np.sin(time * .25 + phase)) / sz
+            puff = (.37 + .34 * np.sin(time * .67 + phase) + .25 * np.sin(time * 1.13 + phase * 2)) ** 2
+            smoke += DT * power * (.10 + puff) * self.source_grain * np.exp(-(dx * dx + dy * dy + dz * dz))
         self.density = smoke
 
-    def lighting(self, strength):
-        cloud = (1 - np.exp(-self.density * strength)) ** 1.09
-        # A small offset towards the light gives the rolled edges depth.
-        shadow = np.roll(cloud, (5, 8), axis=(0, 1))
-        shadow[:5, :] = cloud[:5, :]
-        shadow[:, :8] = cloud[:, :8]
-        lighting = np.clip(.63 + 1.0 * (cloud - shadow), .36, .96)
-        variation = .79 + .38 * self.texture + .42 * self.secondary_texture
-        return cloud, cloud * lighting * variation
+    def plate(self):
+        optical = self.density * self.filaments
+        # Light travels down through the cloud. Deeper voxels receive less direct light.
+        from_top = np.cumsum(optical[:, ::-1], axis=1)[:, ::-1] - optical
+        above_left = np.roll(from_top, 4, axis=2)
+        above_left[:, :, :4] = from_top[:, :, :4]
+        light = .19 + .66 * np.exp(-.35 * from_top) + .15 * np.exp(-.17 * above_left)
+        thickness = .34 * optical[::-1]
+        camera_depth = np.cumsum(thickness, axis=0) - thickness
+        scatter = np.sum(np.exp(-camera_depth) * (-np.expm1(-thickness)) * light[::-1], axis=0)
+        # The camera crops through the open volume, away from the solver's borders.
+        frame = scatter[6:85, 7:147][::-1]
+        luma = 245 * np.clip(frame, 0, 1) ** .88
+        return np.rint(luma).astype(np.uint8)
 
 
 def frames():
-    rear = SmokePlane(17,
-        [(25, 304, 72, 47, .65, 1.0), (210, 295, 85, 39, .49, 3.2),
-         (377, 315, 105, 49, .55, 4.4), (559, 272, 70, 48, .61, .2)],
-        [(75, 227, 91, .30, 1.3), (208, 248, 68, -.33, 2.1),
-         (343, 236, 87, .32, 3.0), (496, 222, 101, -.34, .4)],
-        rise=11, decay=.990)
-    front = SmokePlane(39,
-        [(70, 315, 70, 35, .64, 2.3), (264, 303, 62, 39, .9, .7),
-         (454, 320, 76, 40, .76, 3.5), (569, 265, 63, 45, .68, 2.9)],
-        [(72, 262, 73, -.38, 2.1), (230, 253, 76, .42, 1.0),
-         (390, 263, 86, -.35, 4.1), (517, 207, 74, .42, 3.3)],
-        rise=13, decay=.986)
-
-    # A softly lit bank behind the moving plumes carries depth into the shadows.
-    veil_height = (Y - HEIGHT * .66 + 77 * (rear.texture - .5)) / 38
-    veil = (.18 + .44 * rear.texture) / (1 + np.exp(-veil_height))
-    warmup = 22 * FPS
+    smoke = SmokeVolume()
+    warmup = 16 * FPS
     for index in range(warmup + (SECONDS + OVERLAP) * FPS):
-        time = index / FPS
-        rear.step(time)
-        front.step(time)
+        smoke.step(index / FPS)
         if index >= warmup:
-            _, distant = rear.lighting(1.22)
-            near_alpha, near = front.lighting(1.44)
-            shade = 2 + 250 * (.36 * veil + .73 * distant * (1 - .65 * near_alpha) + .93 * near)
-            yield np.clip(shade, 0, 255).astype(np.uint8)
+            yield smoke.plate()
 
 
-def main():
-    loop = list(frames())
+def write_loop(loop):
     length, overlap = SECONDS * FPS, OVERLAP * FPS
     for index in range(overlap):
         blend = (1 - np.cos(np.pi * index / overlap)) * .5
         loop[index] = np.rint((1 - blend) * loop[length + index] + blend * loop[index]).astype(np.uint8)
-    edge_detail = ImageFilter.UnsharpMask(radius=2.8, percent=135, threshold=1)
-    images = [Image.fromarray(frame).resize((480, 270), Image.Resampling.LANCZOS)
+    edge_detail = ImageFilter.UnsharpMask(radius=1.8, percent=72, threshold=2)
+    images = [Image.fromarray(frame).resize((480, 270), Image.Resampling.BICUBIC)
               .filter(edge_detail).convert('RGB') for frame in loop[:length]]
     frame_time = 1000 / (FPS * PLAYBACK_RATE)
     durations = [round((i + 1) * frame_time) - round(i * frame_time) for i in range(length)]
     images[0].save(ASSETS / 'home-smoke-still.webp', quality=84)
-    # Full frames prevent visible seams from lossy partial-frame updates.
+    # Complete frames avoid artifacts from lossy partial-frame updates.
     images[0].save(ASSETS / 'home-smoke-loop.webp', save_all=True, append_images=images[1:],
-                   loop=0, duration=durations, quality=83, method=4, kmax=1)
+                   loop=0, duration=durations, quality=82, method=4, kmax=1)
 
 
 if __name__ == '__main__':
-    main()
+    write_loop(list(frames()))

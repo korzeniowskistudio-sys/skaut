@@ -25,9 +25,9 @@
   opacity:.25;
   /* Black is neutral. Brighter smoke lifts shadows and dims highlights. */
   mix-blend-mode:exclusion;
-  background:#000 url('/assets/home-smoke-still.webp?v=20261107-smoke-vfx-2') center bottom / cover no-repeat;
+  background:#000 url('/assets/home-smoke-still.webp?v=20261107-smoke-volume') center bottom / cover no-repeat;
 }
 body:has(> #main > .hero) > .home-smoke{display:block}
 @media(prefers-reduced-motion:no-preference){
-  .home-smoke{background-image:url('/assets/home-smoke-loop.webp?v=20261107-smoke-vfx-2')}
+  .home-smoke{background-image:url('/assets/home-smoke-loop.webp?v=20261107-smoke-volume')}
 }
