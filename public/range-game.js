@@ -1,3 +1,5 @@
+import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
+
 const ASSETS = '/assets/range-game/';
 const STAGE_SECONDS = 30;
 const STAGE_NOTICE_SECONDS = 1;
@@ -6,7 +8,7 @@ const STAGES = [
   {points: 500, life: [1.85, 3.1], speed: 1, drift: 1, size: 1},
   {points: 1000, life: [1.5, 2.55], speed: 1.23, drift: 1.15, size: .87},
 ];
-const INTRO_MS = 2050;
+const INTRO_MS = 3270;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const between = (min, max) => min + Math.random() * (max - min);
 
@@ -31,6 +33,7 @@ export function rangeGameMarkup() {
       <button type="button" class="range-utility" data-range-skip>Pomiń intro</button>
     </div>
     <button type="button" class="range-utility range-pause" data-range-pause hidden>Pauza</button>
+    <button type="button" class="range-utility range-sound" data-range-sound aria-label="Dźwięk gry" aria-pressed="true" hidden>Dźwięk: wł.</button>
     <p class="range-sr" id="range-game-controls">Celuj myszą i kliknij, by strzelić. Na ekranie dotykowym dotknij tarczy. Użyj strzałek, aby celować z klawiatury. Spacja oddaje strzał, a Escape wstrzymuje rundę.</p>
   </section>`;
 }
@@ -80,6 +83,8 @@ export function mountRangeGame(root) {
   const play = root.querySelector('[data-range-play]');
   const skip = root.querySelector('[data-range-skip]');
   const pause = root.querySelector('[data-range-pause]');
+  const soundButton = root.querySelector('[data-range-sound]');
+  const audio = createRangeAudio();
   const readouts = root.querySelector('[data-range-readouts]');
   const stageNotice = root.querySelector('[data-range-stage-notice]');
   const stageValue = root.querySelector('[data-range-stage]');
@@ -126,6 +131,7 @@ export function mountRangeGame(root) {
     canvas.tabIndex = next === 'playing' ? 0 : -1;
     overlay.hidden = next === 'playing';
     pause.hidden = next !== 'playing';
+    soundButton.hidden = next === 'intro' || !audio.supported;
     stageNotice.hidden = next !== 'playing' || noticeTime <= 0;
     readouts.hidden = next === 'intro';
     skip.hidden = next !== 'intro';
@@ -152,9 +158,9 @@ export function mountRangeGame(root) {
       return;
     }
     // A fresh image identity restarts the one-shot animation on every visit.
-    intro.src = ASSETS + 'turn-intro.webp?play=' + crypto.randomUUID();
+    intro.src = ASSETS + 'turn-intro.webp?v=20261107-longer&play=' + crypto.randomUUID();
     arena.before(intro);
-    introTimer = setTimeout(() => ready(true), 3500);
+    introTimer = setTimeout(() => ready(true), 4200);
     intro.decode().then(() => {
       if (controller.signal.aborted || phase !== 'intro') return;
       intro.hidden = false;
@@ -266,6 +272,8 @@ export function mountRangeGame(root) {
 
   function finish() {
     stopFrame();
+    audio.pause();
+    audio.play('over');
     setPhase('finished');
     title.textContent = 'GAME OVER';
     const result = `Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
@@ -321,12 +329,14 @@ export function mountRangeGame(root) {
 
   function start() {
     if (phase === 'playing' || phase === 'intro' || !context) return;
-    if (phase !== 'paused') {
+    const restart = phase !== 'paused';
+    if (restart) {
       score = shots = hits = 0;
       startStage(1);
       aim = {x: .5, y: .4};
       pose = {...aim};
     }
+    audio.start(restart);
     setPhase('playing');
     resize();
     updateReadouts();
@@ -338,6 +348,7 @@ export function mountRangeGame(root) {
   function pauseRound(focus = false) {
     if (phase !== 'playing') return;
     stopFrame();
+    audio.pause();
     setPhase('paused');
     title.textContent = 'Pauza.';
     message.textContent = 'Wznów rundę, gdy będziesz gotowy.';
@@ -357,6 +368,7 @@ export function mountRangeGame(root) {
     if (phase !== 'playing' || noticeTime > 0 || elapsed - lastShot < .13) return;
     lastShot = elapsed;
     shots++;
+    audio.play('shot');
     for (let index = targets.length - 1; index >= 0; index--) {
       const target = targetPose(targets[index], elapsed, width, height);
       const distance = Math.hypot(aim.x * width - target.x, aim.y * height - target.y);
@@ -367,12 +379,26 @@ export function mountRangeGame(root) {
       targets.splice(index, 1);
       feedback.push({x: target.x / width, y: target.y / height, points, born: elapsed});
       const next = STAGES[stage];
-      if (next && score >= next.points) startStage(stage + 1);
-      else updateReadouts();
+      if (next && score >= next.points) {
+        audio.play('stage');
+        startStage(stage + 1);
+      } else {
+        audio.play('hit');
+        updateReadouts();
+      }
       break;
     }
   }
 
+  function updateSoundButton() {
+    soundButton.setAttribute('aria-pressed', String(audio.enabled));
+    soundButton.textContent = audio.enabled ? 'Dźwięk: wł.' : 'Dźwięk: wył.';
+  }
+  updateSoundButton();
+  soundButton.addEventListener('click', () => {
+    audio.toggle();
+    updateSoundButton();
+  }, options);
   skip.addEventListener('click', () => { ready(true); play.focus({preventScroll: true}); }, options);
   play.addEventListener('click', start, options);
   pause.addEventListener('click', () => pauseRound(true), options);
@@ -416,6 +442,7 @@ export function mountRangeGame(root) {
     controller.abort();
     clearTimeout(introTimer);
     stopFrame();
+    audio.dispose();
     observer.disconnect();
     resizeObserver.disconnect();
   };

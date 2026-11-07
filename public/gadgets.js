@@ -1,4 +1,4 @@
-import {rangeGameMarkup} from './range-game.js?v=20261107-three-stages';
+import {rangeGameMarkup} from './range-game.js?v=20261107-range-audio';
 
 // Positions follow the 3 × 2 studio contact sheets.
 const gadgets = [

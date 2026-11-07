@@ -112,6 +112,7 @@
 }
 .range-utility:hover { background: white; color: var(--ink); }
 .range-pause { position: absolute; z-index: 2; left: var(--gutter); bottom: 18px; }
+.range-sound { position: absolute; z-index: 2; right: var(--gutter); bottom: 18px; }
 .range-sr {
   position: absolute;
   width: 1px;
