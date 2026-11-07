@@ -201,7 +201,7 @@ def main():
         output = shell.replace('<main id="main" tabindex="-1"></main>', '<main id="main" tabindex="-1">' + article + '</main>')
         output = re.sub(r'<title>.*?</title>', lambda _: '<title>' + html.escape(title) + ' — SKAUT</title>', output)
         output = re.sub(r'<meta name="description"[^>]*>', '', output)
-        (PUBLIC / path.lstrip('/')).write_text(output)
+        (PUBLIC / path.lstrip('/')).write_text('\n'.join(line.rstrip() for line in output.splitlines()) + '\n')
 
     news = []
     category_names = {row['id']: plain(row['name']) for row in categories}

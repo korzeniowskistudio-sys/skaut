@@ -5,6 +5,7 @@ Private credentials: IQHOST_CONFIG or ~/.config/iqhost/ftps.json.
 Remote code backups and verification manifests stay outside Git.
 """
 import concurrent.futures
+import argparse
 import datetime
 import ftplib
 import hashlib
@@ -32,6 +33,9 @@ def connect(config):
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--only',nargs='+',help='Explicit repository paths or directories to publish from the fixed SKAUT allowlist')
+    args=parser.parse_args()
     if CONFIG.stat().st_mode & 0o077:
         raise RuntimeError('Private FTP configuration must be owner-only.')
     config = json.loads(CONFIG.read_text())
@@ -46,6 +50,12 @@ def main():
     runtime += [(p, APP + '/' + p.relative_to(ROOT).as_posix())
                 for folder in ['server', 'content'] for p in sorted((ROOT / folder).rglob('*')) if p.is_file()]
     runtime += [(ROOT / 'scripts' / n, APP + '/scripts/' + n) for n in ['admin.mjs', 'backup.mjs']]
+    if args.only:
+        selected=lambda item:any(item[0].relative_to(ROOT).as_posix()==name.rstrip('/') or item[0].relative_to(ROOT).as_posix().startswith(name.rstrip('/')+'/') for name in args.only)
+        public=list(filter(selected,public))
+        runtime=list(filter(selected,runtime))
+        if not public and not runtime:
+            raise RuntimeError('No selected file belongs to the fixed SKAUT allowlist.')
     files = public + runtime
     assert all(remote.startswith(WEB + '/') or remote.startswith(APP + '/') for _, remote in files)
     assert not any(Path(remote).name == '.htaccess' for _, remote in files)
