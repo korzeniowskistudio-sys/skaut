@@ -1,7 +1,6 @@
 import {esc, intro, kinds, time, trainingTypeIcon} from './ui.js?v=20261107-discipline-icons';
 
 const ZONE='Europe/Warsaw';
-const dayLabels={'pistolet':'Pist.','karabin':'Kar.','pierwszy-raz':'Start','zawody':'Zaw.'};
 const weekdays=['Pn','Wt','Śr','Cz','Pt','So','Nd'];
 const dayFormat=new Intl.DateTimeFormat('pl-PL',{timeZone:ZONE,weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const monthFormat=new Intl.DateTimeFormat('pl-PL',{timeZone:'UTC',month:'long',year:'numeric'});
@@ -75,10 +74,15 @@ export function renderCalendar({main,events=[],isCurrent=()=>true}={}){
   for(let day=1;day<=days;day++){
    const key=`${month}-${String(day).padStart(2,'0')}`,items=monthEvents.filter(event=>eventDateKey(event.startsAt)===key);
    const weekday=(new Date(Date.UTC(year,number-1,day)).getUTCDay()+6)%7;
-   const firstType=items[0]?.type;
-   const names=[...new Set(items.map(typeName))].join(', ');
-   const label=`${fullDay(key)}${key===today?', dzisiaj':''}. Liczba wydarzeń: ${items.length}${names?'. '+names:''}`;
-   cells.push(`<button type="button" class="calendar-day" data-calendar-day="${key}" aria-label="${esc(label)}" aria-pressed="${key===selected}" aria-controls="calendar-agenda" ${key===today?'aria-current="date"':''} tabindex="${key===selected?0:-1}"><span class="calendar-day-weekday">${key===today?'Dziś':weekdays[weekday]}</span><span class="calendar-day-number">${day}</span>${key===today?'<span class="calendar-day-today" aria-hidden="true">Dziś</span>':''}${items.length?`<span class="calendar-day-events"><span class="calendar-day-kind">${trainingTypeIcon(firstType)}<span>${Object.hasOwn(dayLabels,firstType)?dayLabels[firstType]:'Inne'}</span></span>${items.length>1?`<span class="calendar-day-extra">+${items.length-1}</span>`:''}</span>`:'<span class="calendar-day-quiet" aria-hidden="true"></span>'}</button>`);
+   const event=items[0],title=event&&(event.title||typeName(event));
+   const label=`${fullDay(key)}${key===today?', dzisiaj':''}. Liczba wydarzeń: ${items.length}${title?'. '+title:''}`;
+   const preview=event
+    ? `<span class="calendar-day-events">
+        <span class="calendar-day-kind">${trainingTypeIcon(event.type)}<span class="calendar-day-title" title="${esc(title)}">${esc(title)}</span></span>
+        ${items.length>1?`<span class="calendar-day-extra">+${items.length-1}</span>`:''}
+       </span>`
+    : '<span class="calendar-day-quiet" aria-hidden="true"></span>';
+   cells.push(`<button type="button" class="calendar-day${event?' calendar-day--event':''}" data-calendar-day="${key}" aria-label="${esc(label)}" aria-pressed="${key===selected}" aria-controls="calendar-agenda" ${key===today?'aria-current="date"':''} tabindex="${key===selected?0:-1}"><span class="calendar-day-weekday">${key===today?'Dziś':weekdays[weekday]}</span><span class="calendar-day-number">${day}</span>${key===today?'<span class="calendar-day-today" aria-hidden="true">Dziś</span>':''}${preview}</button>`);
   }
   root.innerHTML=`${sample?'<div class="calendar-sample" data-motion><strong>Przykładowy kalendarz</strong><p>Terminy ilustracyjne · bez zapisów.</p></div>':''}<div class="calendar-filters" role="group" aria-label="Rodzaj wydarzenia"><button type="button" data-calendar-filter="" aria-pressed="${!filter}">${icon('calendar-dots')}Wszystkie</button>${Object.entries(kinds).map(([key,label])=>`<button type="button" data-calendar-filter="${key}" aria-pressed="${filter===key}">${trainingTypeIcon(key)}${esc(label)}</button>`).join('')}</div><div class="calendar-layout"><div class="calendar-month" data-motion><div class="calendar-toolbar"><h2 id="calendar-month-title" aria-live="polite">${esc(monthFormat.format(new Date(Date.UTC(year,number-1,1))))}</h2><div class="calendar-month-actions"><button type="button" class="calendar-nav" data-calendar-action="prev" aria-label="Poprzedni miesiąc">${icon('arrow-left')}</button><button type="button" class="calendar-today" data-calendar-action="today">Dzisiaj</button><button type="button" class="calendar-nav" data-calendar-action="next" aria-label="Następny miesiąc">${icon('arrow-right')}</button></div></div><p class="calendar-month-count">Liczba wydarzeń w tym miesiącu: ${monthEvents.length}</p><p class="calendar-mobile-hint">Przesuń dni w bok, aby wybrać termin.</p><div class="calendar-weekdays" aria-hidden="true">${weekdays.map(day=>`<span>${day}</span>`).join('')}</div><div class="calendar-days" role="group" aria-label="Dni miesiąca">${cells.join('')}</div></div><section class="calendar-agenda" id="calendar-agenda" aria-labelledby="calendar-agenda-title"><h2 id="calendar-agenda-title" tabindex="-1">${esc(fullDay(selected))}</h2><div aria-live="polite">${agenda.length?agenda.map(event=>eventCard(event,true)).join(''):`<p class="calendar-empty">W tym dniu nie ma ${sample?'przykładowych ':''}wydarzeń${filter?' z kategorii „'+esc(kinds[filter])+'”':''}.</p>${upcoming.length?`<button type="button" class="text-button" data-calendar-pick="${eventDateKey(upcoming[0].startsAt)}">Pokaż najbliższy termin ${icon('arrow-right')}</button>`:''}`}</div></section></div><section class="calendar-upcoming" aria-labelledby="calendar-upcoming-title"><h2 id="calendar-upcoming-title">Najbliższe wydarzenia</h2><p>${sample?'Przykładowe wpisy na najbliższe 30 dni.':'Opublikowane terminy klubu.'}</p>${upcoming.length?upcoming.map(event=>eventCard(event)).join(''):'<p class="calendar-empty">Brak nadchodzących wydarzeń dla tego wyboru.</p>'}</section>`;
   if(focus)root.querySelector(focus)?.focus({preventScroll:true});

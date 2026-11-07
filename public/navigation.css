@@ -11,7 +11,14 @@
 #navigation .sound-toggle[aria-pressed=true]{border-color:var(--navy)}
 #navigation .sound-toggle:focus-visible{outline-color:var(--navy)}
 @media(prefers-reduced-motion:no-preference){#navigation .navigation-arrow{transition:opacity 120ms ease-out,transform 120ms ease-out}}
-@media(min-width:1001px) and (max-width:1100px){.header #navigation{gap:0}.header #navigation>a{font-size:25px;padding-inline:7px}}
+@media(min-width:1001px){
+  .header{gap:clamp(14px,1.55vw,30px)}
+  .header .brand{margin-right:0;gap:clamp(12px,1.45vw,26px)}
+  .header .brand span{font-size:clamp(39px,3.5vw,48px)}
+  .header .brand img{width:clamp(58px,4.5vw,70px)}
+  .header #navigation{gap:clamp(0px,calc(1vw - 11px),8px)}
+  .header #navigation>a{font-size:clamp(22px,2.15vw,34px);padding-inline:clamp(5px,.55vw,14px)}
+}
 
 /* Fine-pointer compact layouts use the incumbent disclosure at the same breakpoint. */
 @media(min-width:781px) and (max-width:1000px){

@@ -3,11 +3,12 @@
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
 WIDTH, HEIGHT = 576, 324
 FPS, SECONDS, OVERLAP = 15, 20, 4
+PLAYBACK_RATE = 1.25
 DT = 1 / FPS
 Y, X = np.mgrid[:HEIGHT, :WIDTH].astype(np.float32)
 ASSETS = Path(__file__).resolve().parents[1] / 'public' / 'assets'
@@ -70,7 +71,7 @@ class SmokePlane:
         self.density = smoke
 
     def lighting(self, strength):
-        cloud = 1 - np.exp(-self.density * strength)
+        cloud = (1 - np.exp(-self.density * strength)) ** 1.09
         # A small offset towards the light gives the rolled edges depth.
         shadow = np.roll(cloud, (5, 8), axis=(0, 1))
         shadow[:5, :] = cloud[:5, :]
@@ -115,9 +116,11 @@ def main():
     for index in range(overlap):
         blend = (1 - np.cos(np.pi * index / overlap)) * .5
         loop[index] = np.rint((1 - blend) * loop[length + index] + blend * loop[index]).astype(np.uint8)
-    images = [Image.fromarray(frame).resize((480, 270), Image.Resampling.LANCZOS).convert('RGB')
-              for frame in loop[:length]]
-    durations = [round((i + 1) * 1000 / FPS) - round(i * 1000 / FPS) for i in range(length)]
+    edge_detail = ImageFilter.UnsharpMask(radius=2.8, percent=135, threshold=1)
+    images = [Image.fromarray(frame).resize((480, 270), Image.Resampling.LANCZOS)
+              .filter(edge_detail).convert('RGB') for frame in loop[:length]]
+    frame_time = 1000 / (FPS * PLAYBACK_RATE)
+    durations = [round((i + 1) * frame_time) - round(i * frame_time) for i in range(length)]
     images[0].save(ASSETS / 'home-smoke-still.webp', quality=84)
     # Full frames prevent visible seams from lossy partial-frame updates.
     images[0].save(ASSETS / 'home-smoke-loop.webp', save_all=True, append_images=images[1:],

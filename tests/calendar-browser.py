@@ -69,6 +69,7 @@ with sync_playwright() as p:
     }""")
     assert real['sampleCount']==0 and real['link']=='/treningi?date=2026-11-08&type=karabin',real
     expect(page.locator('.calendar-sample')).to_have_count(0)
+    expect(page.locator('[data-calendar-day="2026-11-08"] .calendar-day-title')).to_have_text('Published fixture')
     expect(page.locator('#calendar-agenda')).to_contain_text('Published fixture location')
     assert page.locator('#calendar-agenda a').get_attribute('href')=='/treningi?date=2026-11-08&type=karabin'
     assert page.evaluate('document.getAnimations().length')==0

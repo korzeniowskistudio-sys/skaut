@@ -7,7 +7,7 @@ from playwright.sync_api import expect, sync_playwright
 
 ORIGIN = os.environ.get('SKAUT_GALLERY_ORIGIN', 'http://127.0.0.1:4173').rstrip('/')
 OUTPUT = Path(__file__).resolve().parents[1] / 'artifacts/navigation'
-LABELS = ['Klub', 'Treningi', 'Kalendarz', 'Aktualności', 'Galeria', 'Mój SKAUT']
+LABELS = ['Klub', 'Treningi', 'Kalendarz', 'Aktualności', 'Galeria', 'Gadżety', 'Mój SKAUT']
 PROFILES = [(320, 844, True), (390, 844, True), (844, 390, True), (1024, 900, False), (1440, 1000, False)]
 
 
@@ -23,7 +23,7 @@ def main():
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(ORIGIN + '/galeria', wait_until='networkidle')
             navigation = page.locator('#navigation')
-            expect(navigation.locator('.navigation-label')).to_have_count(6)
+            expect(navigation.locator('.navigation-label')).to_have_count(len(LABELS))
             assert navigation.locator('.navigation-label').all_text_contents() == LABELS
             before = page.locator('.header').bounding_box()
             compact = width <= 780 or (touch and width <= 1100 and height <= 600)
