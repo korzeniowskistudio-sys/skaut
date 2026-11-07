@@ -36,7 +36,7 @@ export function createPageMotion({ main }) {
   function candidates() {
     // Explicit composition layers first; large grids are never animated as one surface.
     const selectors = [
-      '.hero-photo > img', '.hero-photo h1', '.finder > h2', '.finder > p', '.finder > form', '.finder > a',
+      '.hero-photo h1', '.finder > h2', '.finder > p', '.finder > form', '.finder > a',
       '.page-intro > *', '.gallery-intro > *', '.gallery-controls', '.gallery-context',
       '.account-photo > img', '.account-photo h1', '.account-form > h2', '.account-form > p', '.account-form > form',
       '.article > h1', '.article > .lead', '.article > img', '.image-story > img', '.image-story > .copy',
