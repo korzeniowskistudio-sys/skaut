@@ -2,7 +2,7 @@ import {t, tr} from './i18n.js?v=20261108-range-leaderboard';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
 import {STAGES,STAGE_SECONDS,STAGE_NOTICE_SECONDS,TARGET_RINGS,BONUS_POINTS,CLOCK_SECONDS,SHOT_INTERVAL,
   clamp,targetPose,createRandom,createStage,advanceTargets,takeShot} from './range-engine.js?v=20261108-range-leaderboard';
-import {rangeLeaderboardMarkup,mountRangeLeaderboard} from './range-leaderboard.js?v=20261108-range-leaderboard';
+import {rangeLeaderboardMarkup,mountRangeLeaderboard} from './range-leaderboard.js?v=20261108-range-banner';
 
 const ASSETS = '/assets/range-game/';
 const RECORD_KEY = 'skaut-range-high-score';
@@ -16,17 +16,6 @@ export function rangeGameMarkup() {
     <img class="range-art range-art--arena" src="${ASSETS}arena.webp" data-range-arena alt="" hidden>
     <canvas class="range-canvas" aria-label="${t("Plansza gry w ruchome tarcze")}" aria-describedby="range-game-controls" tabindex="-1" hidden></canvas>
     <p class="range-stage-notice" data-range-stage-notice hidden></p>
-    <div class="range-hud">
-      <p class="range-hud-label">SKAUT <span>·</span> ${t("Strefa gry")}</p>
-      <div class="range-readouts" data-range-readouts hidden>
-        <div class="range-stat" role="status"><span>${t("Etap")}</span><strong data-range-stage>1 / ${STAGES.length}</strong></div>
-        <div class="range-stat"><span>${t("Czas")}</span><strong data-range-time>30 s</strong></div>
-        <div class="range-stat range-stat--score" role="status">
-          <span>${t("Wynik")}</span><strong data-range-score>0000</strong>
-          <small class="range-record">${t("Rekord")} <b data-range-high-score>0000</b></small>
-        </div>
-      </div>
-    </div>
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">${t("Ruchome tarcze.")}</h2>
       <p data-range-message>${stageGuide} ${t("Kliknij lub dotknij tarczy.")}
@@ -34,10 +23,24 @@ export function rangeGameMarkup() {
       <button type="button" class="btn light range-play" data-range-play hidden>${t("Graj")}</button>
       <button type="button" class="range-utility" data-range-skip>${t("Pomiń intro")}</button>
     </div>
+    <div class="range-hud">
+      <p class="range-hud-label">SKAUT <span>·</span> ${t("Strefa gry")}</p>
+      <div class="range-hud-panel">
+        <div class="range-readouts" data-range-readouts hidden>
+          <div class="range-stat" role="status"><span>${t("Etap")}</span><strong data-range-stage>1 / ${STAGES.length}</strong></div>
+          <div class="range-stat"><span>${t("Czas")}</span><strong data-range-time>30 s</strong></div>
+          <div class="range-stat range-stat--score" role="status">
+            <span>${t("Wynik")}</span><strong data-range-score>0000</strong>
+            <small class="range-record">${t("Rekord")} <b data-range-high-score>0000</b></small>
+          </div>
+        </div>
+        ${rangeLeaderboardMarkup()}
+      </div>
+    </div>
     <button type="button" class="range-utility range-pause" data-range-pause hidden>${t("Pauza")}</button>
     <button type="button" class="range-utility range-sound" data-range-sound aria-label="${t("Dźwięk gry")}" aria-pressed="true" hidden>${t("Dźwięk: wł.")}</button>
     <p class="range-sr" id="range-game-controls">${t("Celuj myszą i kliknij, by strzelić. Na ekranie dotykowym dotknij tarczy. Użyj strzałek, aby celować z klawiatury. Spacja oddaje strzał, a Escape wstrzymuje rundę.")}</p>
-  </section>${rangeLeaderboardMarkup()}`;
+  </section>`;
 }
 
 export function mountRangeGame(root, request) {
@@ -57,6 +60,7 @@ export function mountRangeGame(root, request) {
   const soundButton = root.querySelector('[data-range-sound]');
   const audio = createRangeAudio();
   const readouts = root.querySelector('[data-range-readouts]');
+  const leaderboardPanel = root.querySelector('[data-range-leaderboard]');
   const stageNotice = root.querySelector('[data-range-stage-notice]');
   const stageValue = root.querySelector('[data-range-stage]');
   const scoreValue = root.querySelector('[data-range-score]');
@@ -65,7 +69,7 @@ export function mountRangeGame(root, request) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const controller = new AbortController();
   const options = {signal: controller.signal};
-  const leaderboard = mountRangeLeaderboard(root.nextElementSibling,request,controller.signal);
+  const leaderboard = mountRangeLeaderboard(leaderboardPanel,request,controller.signal);
   const sprite = new Image();
   let phase = 'intro';
   let introTimer = 0;
@@ -115,6 +119,7 @@ export function mountRangeGame(root, request) {
     soundButton.hidden = next === 'intro' || !audio.supported;
     stageNotice.hidden = next !== 'playing' || noticeTime <= 0;
     readouts.hidden = next === 'intro';
+    leaderboardPanel.hidden = next === 'intro' || next === 'playing';
     skip.hidden = next !== 'intro';
     play.hidden = next === 'intro' || !context;
   }

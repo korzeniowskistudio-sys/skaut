@@ -1,4 +1,4 @@
-import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261108-range-leaderboard';
+import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261108-news-bulletin';
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261107-english';
@@ -19,7 +19,7 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261108-range-leaderboard');
+const loadGadgets = () => import('./gadgets.js?v=20261108-range-banner');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
@@ -75,18 +75,36 @@ function orderNews(posts) {
 }
 
 function homeNewsImage(post) {
- const calendar=post?.id===clubCalendar.id;
+ if(post?.id===clubCalendar.id){
+  return `<img class="news-calendar-image" src="/assets/calendar-2027/kalendarz-skaut-2027-portrait.webp" alt="" width="540" height="1409" loading="lazy" decoding="async">`;
+ }
  const licence=post?.id==='wp-9200';
- const photo=calendar?clubCalendar.newsCrop:licence?'/assets/campaign/licencja-klubowa-badge-1100.webp':'/assets/campaign/photo-01-1100.webp';
- const alt=calendar?post.title:licence?t('Zawodniczka z naszywką Klubu Strzeleckiego SKAUT'):t('Fotografia kampanijna SKAUT');
- return `<span class="home-photo-frame"><img ${campaignImageAttrs(photo,'(max-width: 780px) calc(40vw - 19.2px), 29vw')} src="${photo}" alt="${esc(alt)}" width="400" height="200" loading="lazy" decoding="async"></span>`;
+ const photo=licence?'/assets/campaign/licencja-klubowa-badge-1100.webp':'/assets/campaign/photo-01-1100.webp';
+ const alt=licence?t('Zawodniczka z naszywką Klubu Strzeleckiego SKAUT'):t('Fotografia kampanijna SKAUT');
+ return `<span class="home-photo-frame"><img ${campaignImageAttrs(photo,'(max-width: 1020px) 94vw, 54vw')} src="${photo}" alt="${esc(alt)}" width="1100" height="539" loading="lazy" decoding="async"></span>`;
 }
 
-function homeNewsStory(post) {
- const lang=post.lang||'pl';
- return `<a class="preview-stories story-link" href="/aktualnosci/${esc(post.slug)}">${homeNewsImage(post)}
-  <div lang="${lang}"><h3>${esc(post.title)}</h3><p>${esc(post.summary)}</p></div>
+function homeNewsStory(post,index) {
+ const calendar=post.id===clubCalendar.id;
+ const label=calendar?t('Gadżety klubowe'):t('Sprawy klubu');
+ const action=calendar?t('Zobacz kalendarz'):post.id==='wp-9200'?t('Sprawdź procedurę'):t('Czytaj więcej');
+ return `<a class="preview-stories story-link${calendar?' news-calendar':''}" href="/aktualnosci/${esc(post.slug)}" aria-labelledby="home-news-title-${index} home-news-action-${index}">${homeNewsImage(post)}
+  <div class="news-preview-copy">
+   <span class="news-preview-kicker">${label}</span>
+   <div lang="${post.lang||'pl'}"><h3 id="home-news-title-${index}">${esc(post.title)}</h3><p>${esc(post.summary?.replace('rok.Można','rok. Można'))}</p></div>
+   <span class="news-preview-action" id="home-news-action-${index}"><span>${action}</span> ${icon('arrow-up-right')}</span>
+  </div>
  </a>`;
+}
+
+function homeNews(stories) {
+ return `<section class="news-preview" aria-label="${t('Najnowsze aktualności')}">
+  <div class="news-preview-heading">
+   <div><span class="news-preview-kicker">${t('Biuletyn klubowy')}</span><h2>${t('Aktualności')}</h2>${session.demoMode?`<small>${t('Treści przykładowe')}</small>`:''}</div>
+   <a class="news-preview-action" href="/aktualnosci"><span>${t('Wszystkie wiadomości')}</span> ${icon('arrow-up-right')}</a>
+  </div>
+  <div class="news-preview-items">${stories.length?stories.map(homeNewsStory).join(''):`<div class="preview-stories">${homeNewsImage()}<div class="news-preview-copy"><h3>${t('Tu zaczyna się historia')}</h3><p>${t('Aktualności klubu pojawią się po przeniesieniu zweryfikowanych treści.')}</p></div></div>`}</div>
+ </section>`;
 }
 
 async function home(seq){
@@ -94,7 +112,7 @@ async function home(seq){
  const [news,events]=await Promise.all([api('/news'),api('/events')]);
  if(seq!==routeNumber)return;
  const stories=orderNews(news).slice(0,2).map(localizedPost);
- display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section><section class="news-preview" aria-label="${t("Najnowsze aktualności")}"><div><h2>${t("Aktualności")}</h2>${session.demoMode?`<small>${t("Treści przykładowe")}</small>`:''}<br><a class="text-link" href="/aktualnosci">${t("Wszystkie wiadomości")} ${icon('arrow-up-right')}</a></div><div class="news-preview-items">${stories.length?stories.map(homeNewsStory).join(''):`<div class="preview-stories">${homeNewsImage()}<div><h3>${t("Tu zaczyna się historia")}</h3><p>${t("Aktualności klubu pojawią się po przeniesieniu zweryfikowanych treści.")}</p></div></div>`}</div></section><section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events>${events.length?events.slice(0,3).map(scheduleRow).join(''):session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):''}</div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu. Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();wireAdds();
+ display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section>${homeNews(stories)}<section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events>${events.length?events.slice(0,3).map(scheduleRow).join(''):session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):''}</div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu. Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();wireAdds();
  void scheduleRequest.then(({state,events:remote})=>{
    if(seq!==routeNumber||state==='demo')return;
    main.querySelector('[data-booking-preview]').innerHTML=scheduleNotice(state);
@@ -227,7 +245,7 @@ async function galleryPage(seq){const {renderGallery}=await import('./gallery.js
 async function gadgetsPage(seq) {
  const [{gadgetsMarkup}, {mountRangeGame}, officialProducts] = await Promise.all([
   loadGadgets(),
-  import('./range-game.js?v=20261108-range-leaderboard'),
+  import('./range-game.js?v=20261108-range-banner'),
   loadImportedContent().then(content => content.importedGadgetsGrid()).catch(() => ''),
  ]);
  if (seq !== routeNumber) return;

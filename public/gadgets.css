@@ -12,18 +12,24 @@
 }
 
 .range-leaderboard {
-  max-width: 1600px;
-  margin-inline: auto;
-  padding: 22px var(--gutter);
-  border-bottom: 1px solid var(--gadgets-line);
+  width: min(220px, 100%);
+  max-height: min(220px, 32svh);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 8px 12px;
+  border: 1px solid #b7c0c16e;
+  background: #101719ed;
+  font-size: .81rem;
+  pointer-events: auto;
 }
-.range-leaderboard h2 { font-size: clamp(30px, 4vw, 44px); margin: 0 0 8px; }
-.range-leaderboard ol { margin: 0; padding-inline-start: 24px; max-width: 520px; }
-.range-leaderboard li { padding: 5px 0; }
-.range-leaderboard li span { overflow-wrap: anywhere; margin-inline-end: 16px; }
+.range-leaderboard > h3 { font-size: 22px; margin: 0 0 4px; }
+.range-leaderboard ol { margin: 0; padding-inline-start: 22px; }
+.range-leaderboard li { padding: 2px 0; }
+.range-leaderboard li > span { display: inline-grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; vertical-align: top; }
+.range-leaderboard li span { overflow-wrap: anywhere; }
 .range-leaderboard li strong { font-variant-numeric: tabular-nums; }
 .range-leaderboard p:empty, .range-leaderboard ol:empty { display: none; }
-.range-leaderboard p { margin: 0; }
+.range-leaderboard > p { margin: 0; }
 .range-record-dialog {
   width: min(440px, calc(100% - 32px));
   max-height: calc(100dvh - 32px);
@@ -32,8 +38,10 @@
   border: 1px solid var(--gadgets-line);
   color: var(--ink);
   background: #fff;
+  font-size: 1rem;
 }
 .range-record-dialog::backdrop { background: #0a1722b0; }
+.range-record-dialog h2 { font-size: clamp(30px, 4vw, 44px); margin: 0 0 8px; }
 .range-record-dialog .field { margin: 18px 0; }
 .range-record-dialog [role="alert"] { color: #a31919; }
 .range-record-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
@@ -108,6 +116,7 @@
   text-transform: uppercase;
 }
 .range-hud-label span { color: #ffce80; }
+.range-hud-panel { display: grid; justify-items: end; min-width: 0; gap: 8px; }
 .range-readouts { display: flex; gap: 12px; }
 .range-stat {
   display: grid;
@@ -119,7 +128,7 @@
 }
 .range-stat--score { min-width: 104px; border-color: #ffce80a8; }
 .range-stat > span { font-size: .65rem; letter-spacing: .09em; text-transform: uppercase; }
-.range-stat > strong { font: 700 29px/1 var(--display); font-variant-numeric: tabular-nums; }
+.range-stat > strong { font: 700 29px/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .range-stat--score > strong { color: #ffce80; }
 .range-record { font-size: .65rem; line-height: 1.25; white-space: nowrap; }
 .range-record b { font-variant-numeric: tabular-nums; }
@@ -268,13 +277,14 @@
   .gadgets-items--travel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 740px) {
-  .range-game { min-height: 385px; height: 49svh; max-height: 480px; }
+  .range-game { min-height: 490px; height: 49svh; max-height: 560px; }
   .range-hud { top: 15px; }
   .range-hud-label { font-size: .62rem; letter-spacing: .05em; }
   .range-readouts { gap: 5px; }
   .range-stat { min-width: 49px; padding: 6px 8px; }
   .range-stat--score { min-width: 62px; }
   .range-stat > strong { font-size: 24px; }
+  .range-leaderboard { width: min(172px, 100%); max-height: 110px; }
   .range-overlay p { font-size: .88rem; }
   .gadgets-intro, .gadgets-research ul { grid-template-columns: 1fr; }
   .gadgets-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }

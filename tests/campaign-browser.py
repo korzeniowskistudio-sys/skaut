@@ -12,6 +12,7 @@ ORIGIN = os.environ.get('SKAUT_GALLERY_ORIGIN', 'http://127.0.0.1:4173').rstrip(
 OUTPUT = ROOT / 'artifacts/gallery'
 LICENCE_IMAGE = '/assets/campaign/licencja-klubowa-badge-1100.webp'
 CALENDAR_IMAGE = '/assets/calendar-2027/kalendarz-skaut-2027-news.webp'
+CALENDAR_PORTRAIT = '/assets/calendar-2027/kalendarz-skaut-2027-portrait.webp'
 NEWS_IMAGES = ['02', '03', '04', '05', '07', '08', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
 
@@ -43,17 +44,24 @@ def main():
             page.on('response', lambda response: failed_images.append(response.url) if response.request.resource_type == 'image' and response.status >= 400 else None)
             page.goto(ORIGIN + '/', wait_until='networkidle')
             home = page.locator('main img').evaluate_all('images=>images.map(image=>image.getAttribute("src"))')
-            assert home == ['/assets/hero.webp', LICENCE_IMAGE, CALENDAR_IMAGE, supplied['photo-06']['src']], home
+            assert home == ['/assets/hero.webp', LICENCE_IMAGE, CALENDAR_PORTRAIT, supplied['photo-06']['src']], home
             assert len(set(home)) == 4
-            primary = [LICENCE_IMAGE, CALENDAR_IMAGE, supplied['photo-06']['src']]
+            primary = [LICENCE_IMAGE, CALENDAR_PORTRAIT, supplied['photo-06']['src']]
             for locator, sources in [
                 (page.locator('.news-preview img').first, {LICENCE_IMAGE.replace('1100', str(w)) for w in (360, 720, 1100)}),
-                (page.locator('.news-preview img').nth(1), {CALENDAR_IMAGE}),
+                (page.locator('.news-preview img').nth(1), {CALENDAR_PORTRAIT}),
                 (page.locator('.image-story .home-photo-frame>img'), {variant['src'] for variant in supplied['photo-06']['variants']}),
             ]:
                 state = loaded_image(page, locator)
                 assert urlsplit(state['currentSrc']).path in sources
-                assert state['objectFit'] == 'cover'
+                assert state['objectFit'] == ('contain' if CALENDAR_PORTRAIT in sources else 'cover')
+            calendar = page.locator('.news-calendar')
+            portrait = calendar.locator('img').bounding_box()
+            copy = calendar.locator('.news-preview-copy').bounding_box()
+            assert portrait['x'] + portrait['width'] < copy['x']
+            if width > 1020:
+                row = page.locator('.news-preview-items').bounding_box()
+                assert abs(portrait['height'] - row['height']) < 2, (portrait, row)
 
             page.goto(ORIGIN + '/aktualnosci', wait_until='networkidle')
             expect(page.locator('.news-item a').first).to_have_attribute('href','/aktualnosci/licencja-klubowa-2027-i-licencje-zawodnicze')
@@ -99,7 +107,7 @@ def main():
             expected_sources = {photo['src'] for photo in supplied.values()}
             expected_sources.remove(supplied['photo-01']['src'])
             expected_sources.add(LICENCE_IMAGE)
-            expected_sources.add(CALENDAR_IMAGE)
+            expected_sources.add(CALENDAR_PORTRAIT)
             assert set(primary + actual_news) == expected_sources, 'Campaign image missing or repeated'
             assert not errors, errors
             assert not failed_images, failed_images

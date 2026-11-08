@@ -1,8 +1,8 @@
 import {locale,t,tr} from './i18n.js?v=20261108-range-leaderboard';
 
 export function rangeLeaderboardMarkup() {
-  return `<section class="range-leaderboard" data-range-leaderboard aria-labelledby="range-leaderboard-title">
-    <h2 id="range-leaderboard-title">${t('Ranking gry')}</h2>
+  return `<section class="range-leaderboard" data-range-leaderboard aria-labelledby="range-leaderboard-title" hidden>
+    <h3 id="range-leaderboard-title">${t('Ranking gry')}</h3>
     <ol data-range-records></ol>
     <p data-range-record-status role="status"></p>
     <dialog class="range-record-dialog" aria-labelledby="range-record-title">
@@ -40,13 +40,16 @@ export function mountRangeLeaderboard(root, request, signal) {
 
   function draw(records) {
     if (signal.aborted) return;
+    root.tabIndex = records.length ? 0 : -1;
     list.replaceChildren(...records.map(({name,score}) => {
       const row = document.createElement('li');
+      const entry = document.createElement('span');
       const player = document.createElement('span');
       player.textContent = name;
       const result = document.createElement('strong');
       result.textContent = score.toLocaleString(locale);
-      row.append(player,result);
+      entry.append(player,result);
+      row.append(entry);
       return row;
     }));
     status.textContent = records.length ? '' : t('Zagraj i ustanów pierwszy rekord.');

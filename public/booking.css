@@ -21,13 +21,6 @@
 .imported-pictures img,.imported-body img{display:block;max-width:100%;height:auto;max-height:34rem;object-fit:contain;margin:20px auto}
 .club-calendar-artwork{display:block;text-align:center;margin:24px 0}
 .article .club-calendar-artwork img{display:block;width:100%;height:auto;max-height:720px;object-fit:contain;margin:0 auto 12px;background:#e1e4e7}
-.news-preview-items{display:grid;gap:24px;min-width:0}
-.news-preview .news-preview-items .preview-stories{margin:0}
-.news-preview img[src$="kalendarz-skaut-2027-news.webp"]{object-position:center 43%}
-@media(max-width:780px){
-  .news-preview-items{margin-top:25px}
-  .news-preview img[src$="kalendarz-skaut-2027-news.webp"]{height:auto;aspect-ratio:1;object-position:44% center}
-}
 .imported-body table{display:block;overflow-x:auto;max-width:100%}
 .imported-content :is(h1,h2,strong,a){overflow-wrap:anywhere}
 @media(max-width:680px){

@@ -1,5 +1,10 @@
 // English interface copy. Source text is also the Polish fallback.
 export const englishText = {
+  "Biuletyn klubowy": "Club bulletin",
+  "Sprawy klubu": "Club business",
+  "Sprawdź procedurę": "See how to apply",
+  "Zobacz kalendarz": "View the calendar",
+  "Czytaj więcej": "Read more",
   "Ranking gry": "Range leaderboard",
   "Nowy rekord gry!": "New high score!",
   "Imię lub pseudonim": "Name or nickname",
