@@ -19,7 +19,7 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261107-import');
+const loadGadgets = () => import('./gadgets.js?v=20261108-gadget-catalogue');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
@@ -50,7 +50,7 @@ function wireFinder(){on('#finder','submit',e=>{e.preventDefault();go('/treningi
 function wireAdds(){document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{if(basket.includes(b.dataset.add)){go('/koszyk');return;}if(basket.length>=10){toast(t('Koszyk może zawierać maksymalnie 10 wydarzeń.'));return;}mutateBasket([...basket,b.dataset.add]);b.textContent=t('W koszyku');b.classList.add('secondary');toast(t('Dodano trening do koszyka.'));}));}
 function display(html,title){main.innerHTML=html;localizeLinks(main);document.title=title+' — SKAUT';}
 
-const loadImportedContent=()=>import('./imported-content.js?v=20261107-import');
+const loadImportedContent=()=>import('./imported-content.js?v=20261108-gadget-catalogue');
 const getBookingSchedule=async()=>{
  if(session.demoMode)return {state:'demo',events:[]};
  try{return await (await loadImportedContent()).getImportedSchedule();}
@@ -186,12 +186,13 @@ async function adminPage(seq){if(!session.member){loginPage();return;}const data
 async function galleryPage(seq){const {renderGallery}=await import('./gallery.js?v=20261107-english');if(seq!==routeNumber)return;document.title=t('Galeria — SKAUT');const cleanup=await renderGallery({main,isCurrent:()=>seq===routeNumber});if(seq===routeNumber)galleryCleanup=cleanup;else cleanup();}
 
 async function gadgetsPage(seq) {
- const [{gadgetsMarkup}, {mountRangeGame}] = await Promise.all([
+ const [{gadgetsMarkup}, {mountRangeGame}, officialProducts] = await Promise.all([
   loadGadgets(),
   import('./range-game.js?v=20261107-english'),
+  loadImportedContent().then(content => content.importedGadgetsGrid()).catch(() => ''),
  ]);
  if (seq !== routeNumber) return;
- display(gadgetsMarkup(gadgetBasket), t('Gadżety klubowe'));
+ display(gadgetsMarkup(gadgetBasket, officialProducts), t('Gadżety klubowe'));
  rangeGameCleanup = mountRangeGame(main.querySelector('[data-range-game]'));
  main.querySelectorAll('[data-gadget-add]').forEach(button => button.addEventListener('click', () => {
   const id = button.dataset.gadgetAdd;

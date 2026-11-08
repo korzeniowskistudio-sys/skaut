@@ -39,12 +39,22 @@ function languageNote() {
   return english ? '<p class="imported-language">'+label('Oryginalne opisy są w języku polskim.')+'</p>' : '';
 }
 
-function productCard(product) {
+function productCard(product, heading) {
   return '<article class="news-item imported-product"><a href="'+esc(sitePath(product.path))+'">'+
     (product.image?'<img src="'+esc(product.image)+'" alt="" loading="lazy" decoding="async" width="600" height="400">':'')+
-    '<h2 lang="pl">'+esc(product.title)+'</h2>'+
+    '<'+heading+' lang="pl">'+esc(product.title)+'</'+heading+'>'+
     (Number.isInteger(product.price)?'<p>'+esc(money(product.price))+'</p>':'')+
     '<span class="text-link">'+label('Zobacz produkt')+' '+icon('arrow-up-right')+'</span></a></article>';
+}
+
+function productGrid(products, heading = 'h2') {
+  return '<div class="news-grid imported-products">'+
+    products.map(product=>productCard(product,heading)).join('')+'</div>';
+}
+
+export async function importedGadgetsGrid() {
+  const {products}=await read('index');
+  return productGrid(products,'h3');
 }
 
 function eventListEntry(event) {
@@ -110,7 +120,7 @@ function shopPage(products,pages) {
     title:t('Sklep klubowy'),
     html:intro(t('Sklep klubowy'),t('Oryginalna odzież i gadżety SKAUT.'))+
       '<section class="content imported-content">'+languageNote()+
-      '<div class="news-grid imported-products">'+products.map(productCard).join('')+'</div>'+
+      productGrid(products)+
       '<div class="imported-documents"><h2>'+label('Informacje o sklepie')+'</h2><ul>'+
       pages.map(page=>'<li><a lang="pl" href="'+esc(sitePath(page.path))+'">'+esc(page.title)+'</a></li>').join('')+'</ul></div></section>',
   };

@@ -101,7 +101,7 @@ function card(index, basket, featured = false) {
   </article>`;
 }
 
-export function gadgetsMarkup(basket = []) {
+export function gadgetsMarkup(basket = [], officialProducts = '') {
   return `<div class="gadgets-page">
     ${rangeGameMarkup()}
     <section class="gadgets-catalogue" aria-labelledby="gadgets-title">
@@ -109,10 +109,11 @@ export function gadgetsMarkup(basket = []) {
         <div><p class="gadgets-kicker">${t("Kolekcja klubowa")}</p><h1 id="gadgets-title">${t("Gadżety SKAUT.")}</h1></div>
         <p>${gadgets.length} ${t("pomysłów na klubowe wyposażenie. Ceny są orientacyjne. Dodaj gadżety do koszyka, by zapisać swój wybór.")}</p>
       </header>
-      <aside class="booking-source">
-        <div><strong>${t('Sklep klubowy')}</strong><p>${t('Oryginalna odzież i gadżety SKAUT.')}</p></div>
-        <a class="btn secondary" href="/sklep">${t('Zobacz sklep klubowy')}</a>
-      </aside>
+      ${officialProducts ? `<section class="gadgets-group gadgets-official" aria-labelledby="gadgets-official">
+        <h2 id="gadgets-official">${t('Sklep klubowy')}</h2>
+        <p>${t('Oryginalna odzież i gadżety SKAUT.')}</p>
+        ${officialProducts}
+      </section>` : ''}
       <section class="gadgets-group" aria-labelledby="gadgets-featured">
         <h2 id="gadgets-featured">${t("Torba i bluza")}</h2>
         <div class="gadgets-items gadgets-items--featured">${[0, 1].map(i => card(i, basket, true)).join('')}</div>
