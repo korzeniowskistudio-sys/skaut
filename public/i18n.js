@@ -1,4 +1,4 @@
-import {englishText, englishNews} from './english.js?v=20261108-calendar-product';
+import {englishText, englishNews} from './english.js?v=20261108-range-leaderboard';
 
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],

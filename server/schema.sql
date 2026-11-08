@@ -42,3 +42,10 @@ CREATE TABLE IF NOT EXISTS messages (
  id TEXT PRIMARY KEY, member_id TEXT NOT NULL REFERENCES members(id), sender_id TEXT NOT NULL REFERENCES members(id),
  body TEXT NOT NULL, created_at TEXT NOT NULL, read_at TEXT
 );
+CREATE TABLE IF NOT EXISTS range_rounds (
+ id TEXT PRIMARY KEY, owner TEXT NOT NULL, seed INTEGER NOT NULL, started_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS range_rounds_expiry ON range_rounds(started_at);
+CREATE TABLE IF NOT EXISTS range_records (
+ round_id TEXT PRIMARY KEY, name TEXT NOT NULL, score INTEGER NOT NULL UNIQUE CHECK(score>0)
+);

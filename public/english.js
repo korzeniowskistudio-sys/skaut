@@ -1,5 +1,18 @@
 // English interface copy. Source text is also the Polish fallback.
 export const englishText = {
+  "Ranking gry": "Range leaderboard",
+  "Nowy rekord gry!": "New high score!",
+  "Imię lub pseudonim": "Name or nickname",
+  "Opublikuj wynik": "Publish score",
+  "Pomiń": "Skip",
+  "Zagraj i ustanów pierwszy rekord.": "Play to set the first record.",
+  "Ranking jest chwilowo niedostępny.": "The leaderboard is temporarily unavailable.",
+  "Twój wynik jest w rankingu.": "Your score is on the leaderboard.",
+  "W rankingu jest już wyższy lub równy wynik.": "The leaderboard already has an equal or higher score.",
+  "Nie udało się zapisać wyniku. Spróbuj ponownie.": "Could not save your score. Please try again.",
+  "Wynik: {0} pkt. Ta nazwa pojawi się publicznie obok wyniku.": "Score: {0} points. This name will appear publicly next to your score.",
+  "Podaj nazwę do 24 znaków: litery, cyfry, spacje lub proste znaki.": "Enter up to 24 characters using letters, numbers, spaces or basic punctuation.",
+  "Nie udało się zweryfikować rundy.": "Could not verify this round.",
   "Kalendarz trójdzielny SKAUT 2027": "SKAUT 2027 three-month wall calendar",
   "Otwórz podgląd w pełnym rozmiarze": "View full-size artwork",
   "Zobacz kalendarz w sklepie": "View the calendar in the shop",

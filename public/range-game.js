@@ -1,22 +1,12 @@
-import {t, tr} from './i18n.js?v=20261108-range-clocks';
+import {t, tr} from './i18n.js?v=20261108-range-leaderboard';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
+import {STAGES,STAGE_SECONDS,STAGE_NOTICE_SECONDS,TARGET_RINGS,BONUS_POINTS,CLOCK_SECONDS,SHOT_INTERVAL,
+  clamp,targetPose,createRandom,createStage,advanceTargets,takeShot} from './range-engine.js?v=20261108-range-leaderboard';
+import {rangeLeaderboardMarkup,mountRangeLeaderboard} from './range-leaderboard.js?v=20261108-range-leaderboard';
 
 const ASSETS = '/assets/range-game/';
 const RECORD_KEY = 'skaut-range-high-score';
-const STAGE_SECONDS = 30;
-const STAGE_NOTICE_SECONDS = 1;
-const TARGET_RINGS = 5;
-const POINTS_PER_RING = 20;
-const BONUS_POINTS = 200;
-const CLOCK_SECONDS = 6;
-const STAGES = [
-  {points: 0, life: [3.1, 4.2], speed: .45, drift: .55, size: 1.45},
-  {points: 500, life: [1.85, 3.1], speed: 1, drift: 1, size: 1},
-  {points: 1000, life: [1.5, 2.55], speed: 1.23, drift: 1.15, size: .87, clockTimes: [6, 14, 23]},
-];
 const INTRO_MS = 3270;
-const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-const between = (min, max) => min + Math.random() * (max - min);
 
 export function rangeGameMarkup() {
   const stageGuide = tr`${STAGE_SECONDS} s na etap. Etap 2 od ${STAGES[1].points} pkt, etap 3 od ${STAGES[2].points} pkt.`;
@@ -47,43 +37,10 @@ export function rangeGameMarkup() {
     <button type="button" class="range-utility range-pause" data-range-pause hidden>${t("Pauza")}</button>
     <button type="button" class="range-utility range-sound" data-range-sound aria-label="${t("Dźwięk gry")}" aria-pressed="true" hidden>${t("Dźwięk: wł.")}</button>
     <p class="range-sr" id="range-game-controls">${t("Celuj myszą i kliknij, by strzelić. Na ekranie dotykowym dotknij tarczy. Użyj strzałek, aby celować z klawiatury. Spacja oddaje strzał, a Escape wstrzymuje rundę.")}</p>
-  </section>`;
+  </section>${rangeLeaderboardMarkup()}`;
 }
 
-function newTarget(at, stage, kind = 'regular') {
-  const difficulty = STAGES[stage - 1];
-  const direction = Math.random() < .5 ? -1 : 1;
-  const clock = kind === 'clock';
-  return {
-    kind,
-    born: at,
-    life: clock ? 3.3 : between(...difficulty.life),
-    x: between(.12, .88),
-    y: between(.23, .51),
-    velocity: direction * between(.095, .23) * (clock ? .65 : difficulty.speed),
-    wave: between(0, Math.PI * 2),
-    drift: between(.025, .075) * difficulty.drift,
-    size: between(.84, 1.15) * difficulty.size * (kind === 'bonus' ? .62 : 1),
-  };
-}
-
-function targetPose(target, elapsed, width, height) {
-  const age = elapsed - target.born;
-  const x = target.x + target.velocity * age;
-  const radius = Math.max(10, clamp(width * .025, 17, 30) * target.size);
-  const edge = Math.max(.08, (radius + 2) / width);
-  // Bounce inside the lane so even the quickest targets stay reachable.
-  const lane = 1 - edge * 2;
-  const wrapped = ((x - edge) % (lane * 2) + lane * 2) % (lane * 2);
-  return {
-    x: (edge + Math.min(wrapped, lane * 2 - wrapped)) * width,
-    y: (target.y + Math.sin(age * 3.1 + target.wave) * target.drift) * height,
-    radius,
-    opacity: Math.min(1, age / .13, (target.life - age) / .2),
-  };
-}
-
-export function mountRangeGame(root) {
+export function mountRangeGame(root, request) {
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
   const intro = new Image();
@@ -108,6 +65,7 @@ export function mountRangeGame(root) {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const controller = new AbortController();
   const options = {signal: controller.signal};
+  const leaderboard = mountRangeLeaderboard(root.nextElementSibling,request,controller.signal);
   const sprite = new Image();
   let phase = 'intro';
   let introTimer = 0;
@@ -120,11 +78,12 @@ export function mountRangeGame(root) {
   let stage = 1;
   let noticeTime = 0;
   let elapsed = 0;
-  let stageEnd = STAGE_SECONDS;
-  let upcomingClocks = [];
+  let stageState;
+  let round = null;
+  let random = Math.random;
+  let shotLog = [];
+  let starting = false;
   let lastFrame = 0;
-  let nextTarget = 0;
-  let lastShot = -1;
   let score = 0;
   let record = 0;
   try {
@@ -134,7 +93,6 @@ export function mountRangeGame(root) {
   recordValue.textContent = String(record).padStart(4, '0');
   let shots = 0;
   let hits = 0;
-  let targets = [];
   let feedback = [];
   let aim = {x: .5, y: .4};
   let pose = {...aim};
@@ -253,7 +211,7 @@ export function mountRangeGame(root) {
     const spriteWidth = spriteHeight * ratio;
     const turn = (pose.x - .5) * 2;
     const tilt = (pose.y - .4) * height * .2;
-    const recoil = reduced.matches ? 0 : Math.max(0, 1 - (elapsed - lastShot) / .14);
+    const recoil = reduced.matches ? 0 : Math.max(0, 1 - (elapsed - stageState.lastShot) / .14);
     context.save();
     context.translate(width * (.5 + turn * .24), height * 1.025 + tilt - recoil * 8);
     context.rotate(turn * .28 + recoil * (turn < 0 ? .018 : -.018));
@@ -272,11 +230,11 @@ export function mountRangeGame(root) {
     if (!context) return;
     context.setTransform(density, 0, 0, density, 0, 0);
     context.clearRect(0, 0, width, height);
-    for (const target of targets) {
+    for (const target of stageState.targets) {
       if (target.kind !== 'clock') drawTarget(target);
     }
     drawHands();
-    const clock = targets.at(-1);
+    const clock = stageState.targets.at(-1);
     if (clock?.kind === 'clock') drawTarget(clock);
     context.textAlign = 'center';
     context.font = '700 20px system-ui';
@@ -306,7 +264,7 @@ export function mountRangeGame(root) {
   function updateReadouts() {
     const stageLabel = stage + ' / ' + STAGES.length;
     if (stageValue.textContent !== stageLabel) stageValue.textContent = stageLabel;
-    const time = Math.max(0, Math.ceil(stageEnd - elapsed)) + ' s';
+    const time = Math.max(0, Math.ceil((stageState?.end ?? STAGE_SECONDS) - elapsed)) + ' s';
     if (timeValue.textContent !== time) timeValue.textContent = time;
     const formatted = String(score).padStart(4, '0');
     if (scoreValue.textContent !== formatted) scoreValue.textContent = formatted;
@@ -332,6 +290,8 @@ export function mountRangeGame(root) {
     updateReadouts();
     paint();
     play.focus({preventScroll: true});
+    const finishedRound = round;
+    void leaderboard.offerRecord(finishedRound,score,shotLog,() => phase==='finished' && round===finishedRound && !starting);
   }
 
   function tick(now) {
@@ -341,23 +301,12 @@ export function mountRangeGame(root) {
     const noticeStep = Math.min(noticeTime, dt);
     noticeTime -= noticeStep;
     if (noticeTime === 0 && !stageNotice.hidden) stageNotice.hidden = true;
-    elapsed = Math.min(stageEnd, elapsed + dt - noticeStep);
-    if (elapsed >= stageEnd) {
+    elapsed = Math.min(stageState.end, elapsed + dt - noticeStep);
+    if (elapsed >= stageState.end) {
       finish();
       return;
     }
-    if (elapsed >= nextTarget) {
-      const target = newTarget(elapsed, stage, Math.random() < .2 ? 'bonus' : 'regular');
-      // Keep the clock on top so overlapping targets can't steal its hit.
-      const insertAt = targets.at(-1)?.kind === 'clock' ? targets.length - 1 : targets.length;
-      targets.splice(insertAt, 0, target);
-      nextTarget = elapsed + between(.52, .95);
-    }
-    if (upcomingClocks.length && elapsed >= upcomingClocks[0]) {
-      upcomingClocks.shift();
-      targets.push(newTarget(elapsed, stage, 'clock'));
-    }
-    targets = targets.filter(target => elapsed - target.born < target.life);
+    advanceTargets(stageState,elapsed,random);
     feedback = feedback.filter(hit => elapsed - hit.born < .55);
     const ease = reduced.matches ? 1 : 1 - Math.exp(-dt * 15);
     pose.x += (aim.x - pose.x) * ease;
@@ -371,29 +320,33 @@ export function mountRangeGame(root) {
     stage = number;
     root.dataset.stage = String(number);
     elapsed = 0;
-    stageEnd = STAGE_SECONDS;
-    upcomingClocks = [...(STAGES[stage - 1].clockTimes ?? [])];
+    stageState = createStage(number,random);
     noticeTime = number === 1 ? 0 : STAGE_NOTICE_SECONDS;
     stageNotice.textContent = noticeTime ? `STAGE ${number}` : '';
     stageNotice.hidden = !noticeTime;
-    lastShot = -1;
-    nextTarget = between(.45, .7);
-    targets = [newTarget(0, stage)];
     feedback = [];
     lastFrame = performance.now();
     updateReadouts();
   }
 
-  function start() {
-    if (phase === 'playing' || phase === 'intro' || !context) return;
+  async function start() {
+    if (phase === 'playing' || phase === 'intro' || starting || !context) return;
     const restart = phase !== 'paused';
+    audio.start(restart);
     if (restart) {
+      starting = true;
+      play.disabled = true;
+      round = await leaderboard.startRound();
+      if (controller.signal.aborted) return;
+      starting = false;
+      play.disabled = false;
+      random = round ? createRandom(round.seed) : Math.random;
+      shotLog = [];
       score = shots = hits = 0;
       startStage(1);
       aim = {x: .5, y: .4};
       pose = {...aim};
     }
-    audio.start(restart);
     setPhase('playing');
     resize();
     updateReadouts();
@@ -422,41 +375,31 @@ export function mountRangeGame(root) {
   }
 
   function shoot() {
-    if (phase !== 'playing' || noticeTime > 0 || elapsed - lastShot < .13) return;
-    lastShot = elapsed;
+    if (phase !== 'playing' || noticeTime > 0 || elapsed-stageState.lastShot<SHOT_INTERVAL) return;
     shots++;
     audio.play('shot');
-    for (let index = targets.length - 1; index >= 0; index--) {
-      const entry = targets[index];
-      const target = targetPose(entry, elapsed, width, height);
-      const distance = Math.hypot(aim.x * width - target.x, aim.y * height - target.y);
-      if (target.opacity < .2 || distance > target.radius) continue;
-      const clock = entry.kind === 'clock';
-      const ring = Math.min(TARGET_RINGS - 1, Math.floor(distance / target.radius * TARGET_RINGS));
-      const points = clock ? 0 : entry.kind === 'bonus' ? BONUS_POINTS : (TARGET_RINGS - ring) * POINTS_PER_RING;
-      if (clock) stageEnd += CLOCK_SECONDS;
-      hits++;
-      score += points;
-      if (score > record) {
-        record = score;
-        recordValue.textContent = String(record).padStart(4, '0');
-        try { localStorage.setItem(RECORD_KEY, String(record)); } catch {}
-      }
-      targets.splice(index, 1);
-      feedback.push({
-        x: target.x / width, y: target.y / height, born: elapsed,
-        text: clock ? `+${CLOCK_SECONDS} s` : `+${points}`,
-        color: clock ? '#a9e3ff' : '#ffe0a9',
-      });
-      const next = STAGES[stage];
-      if (next && score >= next.points) {
-        audio.play('stage');
-        startStage(stage + 1);
-      } else {
-        audio.play('hit');
-        updateReadouts();
-      }
-      break;
+    if (round) shotLog.push([stage,elapsed,aim.x,aim.y,width,height]);
+    const target = takeShot(stageState,elapsed,aim.x,aim.y,width,height,random);
+    if (!target) return;
+    hits++;
+    score += target.points;
+    if (score > record) {
+      record = score;
+      recordValue.textContent = String(record).padStart(4, '0');
+      try { localStorage.setItem(RECORD_KEY, String(record)); } catch {}
+    }
+    feedback.push({
+      x: target.x / width, y: target.y / height, born: elapsed,
+      text: target.clock ? `+${CLOCK_SECONDS} s` : `+${target.points}`,
+      color: target.clock ? '#a9e3ff' : '#ffe0a9',
+    });
+    const next = STAGES[stage];
+    if (next && score >= next.points) {
+      audio.play('stage');
+      startStage(stage + 1);
+    } else {
+      audio.play('hit');
+      updateReadouts();
     }
   }
 

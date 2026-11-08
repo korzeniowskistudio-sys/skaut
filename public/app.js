@@ -1,4 +1,4 @@
-import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261108-calendar-product';
+import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261108-range-leaderboard';
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261107-english';
@@ -19,11 +19,11 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261108-range-clocks');
+const loadGadgets = () => import('./gadgets.js?v=20261108-range-leaderboard');
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
-async function api(path,method='GET',body){const res=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json',...(method==='GET'?{}:{'X-CSRF-Token':session.csrf})},body:body?JSON.stringify(body):undefined});let data;try{data=await res.json();}catch{throw new Error(t('Serwer nie odpowiada poprawnie. Spróbuj ponownie.'));}if(!res.ok)throw Object.assign(new Error(t(data.error)),{status:res.status});if(data.csrf)session.csrf=data.csrf;return data;}
+async function api(path,method='GET',body,signal){const res=await fetch('/api'+path,{method,signal,headers:{'Content-Type':'application/json',...(method==='GET'?{}:{'X-CSRF-Token':session.csrf})},body:body?JSON.stringify(body):undefined});let data;try{data=await res.json();}catch{throw new Error(t('Serwer nie odpowiada poprawnie. Spróbuj ponownie.'));}if(!res.ok)throw Object.assign(new Error(t(data.error)),{status:res.status});if(data.csrf)session.csrf=data.csrf;return data;}
 function updateBasket(){
  const count = basket.length + gadgetBasket.length;
  const badge = document.querySelector('#basket-count');
@@ -227,12 +227,12 @@ async function galleryPage(seq){const {renderGallery}=await import('./gallery.js
 async function gadgetsPage(seq) {
  const [{gadgetsMarkup}, {mountRangeGame}, officialProducts] = await Promise.all([
   loadGadgets(),
-  import('./range-game.js?v=20261108-range-clocks'),
+  import('./range-game.js?v=20261108-range-leaderboard'),
   loadImportedContent().then(content => content.importedGadgetsGrid()).catch(() => ''),
  ]);
  if (seq !== routeNumber) return;
  display(gadgetsMarkup(gadgetBasket, officialProducts), t('Gadżety klubowe'));
- rangeGameCleanup = mountRangeGame(main.querySelector('[data-range-game]'));
+ rangeGameCleanup = mountRangeGame(main.querySelector('[data-range-game]'),api);
  main.querySelectorAll('[data-gadget-add]').forEach(button => button.addEventListener('click', () => {
   const id = button.dataset.gadgetAdd;
   if (gadgetBasket.includes(id)) {

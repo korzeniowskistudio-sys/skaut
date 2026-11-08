@@ -4,11 +4,13 @@ import { resolve,extname,sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { problem,text,now } from './store.mjs';
+import { createRangeRecords } from './range-records.mjs';
 import { createScheduleFeed } from './zbrojownia.mjs';
 import { hashPassword,verifyPassword,token,digest,clientAddress } from './security.mjs';
 
 export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new URL('../public/',import.meta.url)),appOrigin='',secureCookies=false,trustedProxies=[],redirects={},archivePaths={},scheduleFeed=createScheduleFeed()}) {
  const attempts=new Map();
+ const range=createRangeRecords(s.db);
  const cookie=(name,value,maxAge=86400)=>`${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secureCookies?'; Secure':''}`;
  return createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('X-Frame-Options','DENY');
@@ -57,6 +59,12 @@ export function createApp({store:s,demoMode=false,publicDir=fileURLToPath(new UR
      const t=Date.now(),prior=attempts.get(rateKey),rate=prior&&prior.until>t?prior:{count:0,until:t+900000};rate.count++;attempts.set(rateKey,rate);
      if(attempts.size>10000)for(const[k,v]of attempts)if(v.until<t)attempts.delete(k);
      if(rate.count>(rateKey.endsWith(':auth')?20:200))throw problem(429,'Zbyt wiele prób. Spróbuj później.');
+    }
+    if(req.method==='GET'&&path==='/api/range/records')return json(200,range.records());
+    if(req.method==='POST'&&path==='/api/range/round')return json(201,range.start(digest(session?.csrf||cookies.skaut_csrf)));
+    if(req.method==='POST'&&path==='/api/range/records'){
+     const result=range.submit(digest(session?.csrf||cookies.skaut_csrf),body);
+     return json(result.published?201:200,result);
     }
     if(req.method==='POST'&&path==='/api/register') {
      const hash=await hashPassword(body.password),m=s.createMember({name:body.name,email:body.email,passwordHash:hash});return json(201,{member:m,csrf:issue(m)});
