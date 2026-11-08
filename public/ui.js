@@ -4,6 +4,7 @@ export const clubCalendar = {
   id:'skaut-kalendarz-2027',
   path:'/sklep/kalendarz-skaut-2027',
   preview:'/assets/calendar-2027/kalendarz-skaut-2027-preview.webp',
+  newsCrop:'/assets/calendar-2027/kalendarz-skaut-2027-news.webp',
   artwork:'/assets/calendar-2027/kalendarz-skaut-2027.webp',
 };
 
@@ -18,7 +19,7 @@ const campaignImages=new Set(['/assets/hero.webp','/assets/range-front.webp','/a
 export function campaignImageAttrs(src,sizes){let stem;if(campaignImages.has(src))stem='/assets/optimized/'+src.slice('/assets/'.length,-'.webp'.length);else{const match=typeof src==='string'&&src.match(/^(\/assets\/campaign\/(?:photo-(?:0[1-9]|1[0-9])|licencja-klubowa-badge))-(?:360|720|1100)\.webp$/);if(!match)return '';stem=match[1];}return `srcset="${[360,720,1100].map(width=>`${stem}-${width}.webp ${width}w`).join(', ')}" sizes="${esc(sizes)}"`;}
 // Fixed source-post IDs preserve the image assignment during filtering and search.
 const newsCampaignImages=new Map([['wp-9200','02'],['wp-9141','03'],['wp-9068','04'],['wp-9040','05'],['wp-8922','07'],['wp-8951','08'],['wp-8930','11'],['wp-8913','12'],['wp-8874','13'],['wp-8775','14'],['wp-8770','15'],['wp-8772','16'],['wp-8774','17'],['wp-8782','18'],['wp-8768','19']]);
-export function campaignNewsImage(news){const source=typeof news.image==='string'?news.image:'';const path=source.split(/[?#]/)[0];const legacy=campaignImages.has(path)||/^\/assets\/optimized\/(?:hero|range-front|range-side)-(?:360|720|1100)\.webp$/.test(path);if(source&&!legacy)return source;const assigned=newsCampaignImages.get(String(news.id));return assigned?`/assets/campaign/photo-${assigned}-1100.webp`:'';}
+export function campaignNewsImage(news){if(news.id===clubCalendar.id)return clubCalendar.newsCrop;const source=typeof news.image==='string'?news.image:'';const path=source.split(/[?#]/)[0];const legacy=campaignImages.has(path)||/^\/assets\/optimized\/(?:hero|range-front|range-side)-(?:360|720|1100)\.webp$/.test(path);if(source&&!legacy)return source;const assigned=newsCampaignImages.get(String(news.id));return assigned?`/assets/campaign/photo-${assigned}-1100.webp`:'';}
 export const money=v=>new Intl.NumberFormat(locale,{style:'currency',currency:'PLN'}).format(v/100);
 export const date=v=>new Intl.DateTimeFormat(locale,{day:'numeric',month:'long',year:'numeric',timeZone:'Europe/Warsaw'}).format(new Date(v));
 export const time=v=>new Intl.DateTimeFormat(locale,{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Warsaw'}).format(new Date(v));

@@ -2,7 +2,7 @@ import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, local
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261107-english';
-import {esc,money,date,time,kinds,statuses,field,empty,intro,finder,eventRow,newsItem,achievements,booking,campaignImageAttrs,campaignNewsImage,trainingTypeIcon,sampleEventRow,scheduleKinds,scheduleNotice,importedEventRow,clubCalendar,clubCalendarArtwork} from './ui.js?v=20261108-calendar-product';
+import {esc,money,date,time,kinds,statuses,field,empty,intro,finder,eventRow,newsItem,achievements,booking,campaignImageAttrs,campaignNewsImage,trainingTypeIcon,sampleEventRow,scheduleKinds,scheduleNotice,importedEventRow,clubCalendar,clubCalendarArtwork} from './ui.js?v=20261108-calendar-news';
 initLanguage();
 const main=document.querySelector('main');
 const pageMotion=createPageMotion({main});
@@ -67,14 +67,34 @@ async function importedContentPage(path,seq){
  page.wire?.(main);
 }
 
-async function home(seq){const scheduleRequest=getBookingSchedule();const [news,events]=await Promise.all([api('/news'),api('/events')]);if(seq!==routeNumber)return;
- const first=news[0]&&localizedPost(news[0]);
- const hasLicenceBadge = first?.id === 'wp-9200';
- const isCalendar = first?.id === clubCalendar.id;
- const featuredPhoto = isCalendar ? clubCalendar.preview : hasLicenceBadge ? '/assets/campaign/licencja-klubowa-badge-1100.webp' : '/assets/campaign/photo-01-1100.webp';
- const featuredAlt = isCalendar ? first.title : hasLicenceBadge ? t('Zawodniczka z naszywką Klubu Strzeleckiego SKAUT') : t('Fotografia kampanijna SKAUT');
- const featuredImage = `<span class="home-photo-frame"><img ${campaignImageAttrs(featuredPhoto,'(max-width: 780px) calc(40vw - 19.2px), 29vw')} src="${featuredPhoto}" alt="${esc(featuredAlt)}" width="400" height="200" loading="lazy" decoding="async"></span>`;
- display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section><section class="news-preview" aria-label="${t("Najnowsze aktualności")}"><div><h2>${t("Aktualności")}</h2>${session.demoMode?`<small>${t("Treści przykładowe")}</small>`:''}<br><a class="text-link" href="/aktualnosci">${t("Wszystkie wiadomości")} ${icon('arrow-up-right')}</a></div>${first?`<a class="preview-stories story-link" href="/aktualnosci/${esc(first.slug)}">${featuredImage}<div><h3 lang="${first.lang||'pl'}">${esc(first.title)}</h3><p lang="${first.lang||'pl'}">${esc(first.summary)}</p></div></a>`:`<div class="preview-stories">${featuredImage}<div><h3>${t("Tu zaczyna się historia")}</h3><p>${t("Aktualności klubu pojawią się po przeniesieniu zweryfikowanych treści.")}</p></div></div>`}</section><section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events>${events.length?events.slice(0,3).map(scheduleRow).join(''):session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):''}</div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu. Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();wireAdds();
+function orderNews(posts) {
+ const calendar=posts.find(post=>post.id===clubCalendar.id);
+ if(!calendar||posts.length<2)return posts;
+ const [lead,...rest]=posts.filter(post=>post.id!==clubCalendar.id);
+ return [lead,calendar,...rest];
+}
+
+function homeNewsImage(post) {
+ const calendar=post?.id===clubCalendar.id;
+ const licence=post?.id==='wp-9200';
+ const photo=calendar?clubCalendar.newsCrop:licence?'/assets/campaign/licencja-klubowa-badge-1100.webp':'/assets/campaign/photo-01-1100.webp';
+ const alt=calendar?post.title:licence?t('Zawodniczka z naszywką Klubu Strzeleckiego SKAUT'):t('Fotografia kampanijna SKAUT');
+ return `<span class="home-photo-frame"><img ${campaignImageAttrs(photo,'(max-width: 780px) calc(40vw - 19.2px), 29vw')} src="${photo}" alt="${esc(alt)}" width="400" height="200" loading="lazy" decoding="async"></span>`;
+}
+
+function homeNewsStory(post) {
+ const lang=post.lang||'pl';
+ return `<a class="preview-stories story-link" href="/aktualnosci/${esc(post.slug)}">${homeNewsImage(post)}
+  <div lang="${lang}"><h3>${esc(post.title)}</h3><p>${esc(post.summary)}</p></div>
+ </a>`;
+}
+
+async function home(seq){
+ const scheduleRequest=getBookingSchedule();
+ const [news,events]=await Promise.all([api('/news'),api('/events')]);
+ if(seq!==routeNumber)return;
+ const stories=orderNews(news).slice(0,2).map(localizedPost);
+ display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section><section class="news-preview" aria-label="${t("Najnowsze aktualności")}"><div><h2>${t("Aktualności")}</h2>${session.demoMode?`<small>${t("Treści przykładowe")}</small>`:''}<br><a class="text-link" href="/aktualnosci">${t("Wszystkie wiadomości")} ${icon('arrow-up-right')}</a></div><div class="news-preview-items">${stories.length?stories.map(homeNewsStory).join(''):`<div class="preview-stories">${homeNewsImage()}<div><h3>${t("Tu zaczyna się historia")}</h3><p>${t("Aktualności klubu pojawią się po przeniesieniu zweryfikowanych treści.")}</p></div></div>`}</div></section><section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events>${events.length?events.slice(0,3).map(scheduleRow).join(''):session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):''}</div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu. Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();wireAdds();
  void scheduleRequest.then(({state,events:remote})=>{
    if(seq!==routeNumber||state==='demo')return;
    main.querySelector('[data-booking-preview]').innerHTML=scheduleNotice(state);
@@ -120,7 +140,7 @@ async function calendarPage(seq){
  calendarCleanup=renderCalendar({main,events:mergeSchedule(local,remote.events),bookingState:remote.state,isCurrent:()=>seq===routeNumber});
 }
 
-async function newsPage(seq){const list=(await api('/news')).map(localizedPost);if(seq!==routeNumber)return;
+async function newsPage(seq){const list=orderNews(await api('/news')).map(localizedPost);if(seq!==routeNumber)return;
  display(`${intro(t('Aktualności.'),t('Z życia klubu. Ze strzelnicy. Z linii startu.'))}<section class="content">${english?'<p class="notice">'+t('Archiwalne artykuły i oficjalne dokumenty są dostępne po polsku.')+'</p>':''}<label class="field">${t("Szukaj w aktualnościach")}<input id="news-search" type="search" placeholder="${t("Wpisz temat lub tytuł")}"></label><div class="filter-tabs" aria-label="${t("Kategorie aktualności")}"><button data-category="" aria-pressed="true">${t("Wszystkie")}</button>${[...new Set(list.map(n=>n.category))].map(c=>`<button data-category="${esc(c)}" aria-pressed="false">${esc(t(c))}</button>`).join('')}</div><div id="news-results" class="news-grid"></div><p id="news-count" role="status"></p></section>`,t('Aktualności'));
  let category='';const draw=()=>{const q=document.querySelector('#news-search').value.toLocaleLowerCase('pl');const filtered=list.filter(n=>(!category||n.category===category)&&[n.title,n.summary,n.sourceTitle,n.sourceSummary].join(' ').toLocaleLowerCase('pl').includes(q));document.querySelector('#news-results').innerHTML=filtered.length?filtered.map(newsItem).join(''):empty(t('Brak wiadomości'),t('Zmień wyszukiwanie lub wróć po opublikowaniu aktualności.'));document.querySelector('#news-count').textContent=filtered.length?tr`Artykuły: ${filtered.length}`:'';};draw();on('#news-search','input',draw);document.querySelectorAll('[data-category]').forEach(b=>b.addEventListener('click',()=>{category=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();}));}
 async function articlePage(seq){
