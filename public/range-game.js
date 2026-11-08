@@ -1,4 +1,4 @@
-import {t, tr} from './i18n.js?v=20261108-range-targets';
+import {t, tr} from './i18n.js?v=20261108-range-clocks';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
 
 const ASSETS = '/assets/range-game/';
@@ -8,16 +8,19 @@ const STAGE_NOTICE_SECONDS = 1;
 const TARGET_RINGS = 5;
 const POINTS_PER_RING = 20;
 const BONUS_POINTS = 200;
+const CLOCK_SECONDS = 6;
 const STAGES = [
   {points: 0, life: [3.1, 4.2], speed: .45, drift: .55, size: 1.45},
   {points: 500, life: [1.85, 3.1], speed: 1, drift: 1, size: 1},
-  {points: 1000, life: [1.5, 2.55], speed: 1.23, drift: 1.15, size: .87},
+  {points: 1000, life: [1.5, 2.55], speed: 1.23, drift: 1.15, size: .87, clockTimes: [6, 14, 23]},
 ];
 const INTRO_MS = 3270;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const between = (min, max) => min + Math.random() * (max - min);
 
 export function rangeGameMarkup() {
+  const stageGuide = tr`${STAGE_SECONDS} s na etap. Etap 2 od ${STAGES[1].points} pkt, etap 3 od ${STAGES[2].points} pkt.`;
+  const clockGuide = tr`Zegar w etapie 3: +${CLOCK_SECONDS} s.`;
   return `<section class="range-game" data-range-game data-phase="intro" aria-labelledby="range-game-title">
     <img class="range-art" src="${ASSETS}poster.webp" alt="" width="1120" height="480" fetchpriority="high">
     <img class="range-art range-art--arena" src="${ASSETS}arena.webp" data-range-arena alt="" hidden>
@@ -36,7 +39,8 @@ export function rangeGameMarkup() {
     </div>
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">${t("Ruchome tarcze.")}</h2>
-      <p data-range-message>${t("Masz")} ${STAGE_SECONDS} ${t("sekund na etap. Etap 2 zaczyna się przy")} ${STAGES[1].points} ${t("pkt, a etap 3 przy")} ${STAGES[2].points} ${t("pkt. Celuj myszą i kliknij albo dotknij tarczy.")} ${t("Zwykła tarcza: 20–100 pkt, im bliżej środka, tym więcej. Mała, jasna tarcza: 200 pkt.")}</p>
+      <p data-range-message>${stageGuide} ${t("Kliknij lub dotknij tarczy.")}
+        ${t("Celność daje 20–100 pkt. Jasna tarcza daje 200 pkt.")} ${clockGuide}</p>
       <button type="button" class="btn light range-play" data-range-play hidden>${t("Graj")}</button>
       <button type="button" class="range-utility" data-range-skip>${t("Pomiń intro")}</button>
     </div>
@@ -46,19 +50,20 @@ export function rangeGameMarkup() {
   </section>`;
 }
 
-function newTarget(at, stage, bonus = false) {
+function newTarget(at, stage, kind = 'regular') {
   const difficulty = STAGES[stage - 1];
   const direction = Math.random() < .5 ? -1 : 1;
+  const clock = kind === 'clock';
   return {
-    bonus,
+    kind,
     born: at,
-    life: between(...difficulty.life),
+    life: clock ? 3.3 : between(...difficulty.life),
     x: between(.12, .88),
     y: between(.23, .51),
-    velocity: direction * between(.095, .23) * difficulty.speed,
+    velocity: direction * between(.095, .23) * (clock ? .65 : difficulty.speed),
     wave: between(0, Math.PI * 2),
     drift: between(.025, .075) * difficulty.drift,
-    size: between(.84, 1.15) * difficulty.size * (bonus ? .62 : 1),
+    size: between(.84, 1.15) * difficulty.size * (kind === 'bonus' ? .62 : 1),
   };
 }
 
@@ -115,6 +120,8 @@ export function mountRangeGame(root) {
   let stage = 1;
   let noticeTime = 0;
   let elapsed = 0;
+  let stageEnd = STAGE_SECONDS;
+  let upcomingClocks = [];
   let lastFrame = 0;
   let nextTarget = 0;
   let lastShot = -1;
@@ -198,16 +205,26 @@ export function mountRangeGame(root) {
   function drawTarget(target) {
     const {x, y, radius, opacity} = targetPose(target, elapsed, width, height);
     if (opacity <= 0) return;
+    const {kind} = target;
     context.save();
     context.globalAlpha = opacity;
-    context.lineWidth = target.bonus ? 2 : 1.5;
-    context.fillStyle = target.bonus ? '#e1fff5' : '#1a2021';
-    context.strokeStyle = target.bonus ? '#68ffdc' : '#ffce80';
+    context.lineWidth = kind === 'regular' ? 1.5 : 2;
+    context.fillStyle = kind === 'clock' ? '#eaf7ff' : kind === 'bonus' ? '#e1fff5' : '#1a2021';
+    context.strokeStyle = kind === 'clock' ? '#7ec9ff' : kind === 'bonus' ? '#68ffdc' : '#ffce80';
     context.beginPath();
     context.arc(x, y, radius, 0, Math.PI * 2);
     context.fill();
     context.stroke();
-    if (target.bonus) {
+    if (kind === 'clock') {
+      context.strokeStyle = '#163f64';
+      context.lineWidth = Math.max(2, radius * .12);
+      context.lineCap = 'round';
+      context.beginPath();
+      context.moveTo(x, y - radius * .55);
+      context.lineTo(x, y);
+      context.lineTo(x + radius * .42, y + radius * .19);
+      context.stroke();
+    } else if (kind === 'bonus') {
       context.fillStyle = '#12483f';
       context.font = `bold ${Math.max(9, radius * .7)}px sans-serif`;
       context.textAlign = 'center';
@@ -255,15 +272,19 @@ export function mountRangeGame(root) {
     if (!context) return;
     context.setTransform(density, 0, 0, density, 0, 0);
     context.clearRect(0, 0, width, height);
-    targets.forEach(drawTarget);
+    for (const target of targets) {
+      if (target.kind !== 'clock') drawTarget(target);
+    }
     drawHands();
+    const clock = targets.at(-1);
+    if (clock?.kind === 'clock') drawTarget(clock);
     context.textAlign = 'center';
     context.font = '700 20px system-ui';
     for (const hit of feedback) {
       const age = elapsed - hit.born;
       context.globalAlpha = 1 - age / .55;
-      context.fillStyle = '#ffe0a9';
-      context.fillText('+' + hit.points, hit.x * width, hit.y * height - 12 - (reduced.matches ? 0 : age * 30));
+      context.fillStyle = hit.color;
+      context.fillText(hit.text, hit.x * width, hit.y * height - 12 - (reduced.matches ? 0 : age * 30));
     }
     context.globalAlpha = 1;
     if (phase !== 'playing' || noticeTime > 0) return;
@@ -285,7 +306,7 @@ export function mountRangeGame(root) {
   function updateReadouts() {
     const stageLabel = stage + ' / ' + STAGES.length;
     if (stageValue.textContent !== stageLabel) stageValue.textContent = stageLabel;
-    const time = Math.max(0, Math.ceil(STAGE_SECONDS - elapsed)) + ' s';
+    const time = Math.max(0, Math.ceil(stageEnd - elapsed)) + ' s';
     if (timeValue.textContent !== time) timeValue.textContent = time;
     const formatted = String(score).padStart(4, '0');
     if (scoreValue.textContent !== formatted) scoreValue.textContent = formatted;
@@ -320,14 +341,21 @@ export function mountRangeGame(root) {
     const noticeStep = Math.min(noticeTime, dt);
     noticeTime -= noticeStep;
     if (noticeTime === 0 && !stageNotice.hidden) stageNotice.hidden = true;
-    elapsed = Math.min(STAGE_SECONDS, elapsed + dt - noticeStep);
-    if (elapsed >= STAGE_SECONDS) {
+    elapsed = Math.min(stageEnd, elapsed + dt - noticeStep);
+    if (elapsed >= stageEnd) {
       finish();
       return;
     }
     if (elapsed >= nextTarget) {
-      targets.push(newTarget(elapsed, stage, Math.random() < .2));
+      const target = newTarget(elapsed, stage, Math.random() < .2 ? 'bonus' : 'regular');
+      // Keep the clock on top so overlapping targets can't steal its hit.
+      const insertAt = targets.at(-1)?.kind === 'clock' ? targets.length - 1 : targets.length;
+      targets.splice(insertAt, 0, target);
       nextTarget = elapsed + between(.52, .95);
+    }
+    if (upcomingClocks.length && elapsed >= upcomingClocks[0]) {
+      upcomingClocks.shift();
+      targets.push(newTarget(elapsed, stage, 'clock'));
     }
     targets = targets.filter(target => elapsed - target.born < target.life);
     feedback = feedback.filter(hit => elapsed - hit.born < .55);
@@ -343,6 +371,8 @@ export function mountRangeGame(root) {
     stage = number;
     root.dataset.stage = String(number);
     elapsed = 0;
+    stageEnd = STAGE_SECONDS;
+    upcomingClocks = [...(STAGES[stage - 1].clockTimes ?? [])];
     noticeTime = number === 1 ? 0 : STAGE_NOTICE_SECONDS;
     stageNotice.textContent = noticeTime ? `STAGE ${number}` : '';
     stageNotice.hidden = !noticeTime;
@@ -397,11 +427,14 @@ export function mountRangeGame(root) {
     shots++;
     audio.play('shot');
     for (let index = targets.length - 1; index >= 0; index--) {
-      const target = targetPose(targets[index], elapsed, width, height);
+      const entry = targets[index];
+      const target = targetPose(entry, elapsed, width, height);
       const distance = Math.hypot(aim.x * width - target.x, aim.y * height - target.y);
       if (target.opacity < .2 || distance > target.radius) continue;
+      const clock = entry.kind === 'clock';
       const ring = Math.min(TARGET_RINGS - 1, Math.floor(distance / target.radius * TARGET_RINGS));
-      const points = targets[index].bonus ? BONUS_POINTS : (TARGET_RINGS - ring) * POINTS_PER_RING;
+      const points = clock ? 0 : entry.kind === 'bonus' ? BONUS_POINTS : (TARGET_RINGS - ring) * POINTS_PER_RING;
+      if (clock) stageEnd += CLOCK_SECONDS;
       hits++;
       score += points;
       if (score > record) {
@@ -410,7 +443,11 @@ export function mountRangeGame(root) {
         try { localStorage.setItem(RECORD_KEY, String(record)); } catch {}
       }
       targets.splice(index, 1);
-      feedback.push({x: target.x / width, y: target.y / height, points, born: elapsed});
+      feedback.push({
+        x: target.x / width, y: target.y / height, born: elapsed,
+        text: clock ? `+${CLOCK_SECONDS} s` : `+${points}`,
+        color: clock ? '#a9e3ff' : '#ffe0a9',
+      });
       const next = STAGES[stage];
       if (next && score >= next.points) {
         audio.play('stage');
