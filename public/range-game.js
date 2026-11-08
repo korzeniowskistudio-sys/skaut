@@ -1,10 +1,13 @@
-import {t, tr} from './i18n.js?v=20261107-english';
+import {t, tr} from './i18n.js?v=20261108-range-targets';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
 
 const ASSETS = '/assets/range-game/';
 const RECORD_KEY = 'skaut-range-high-score';
 const STAGE_SECONDS = 30;
 const STAGE_NOTICE_SECONDS = 1;
+const TARGET_RINGS = 5;
+const POINTS_PER_RING = 20;
+const BONUS_POINTS = 200;
 const STAGES = [
   {points: 0, life: [3.1, 4.2], speed: .45, drift: .55, size: 1.45},
   {points: 500, life: [1.85, 3.1], speed: 1, drift: 1, size: 1},
@@ -33,7 +36,7 @@ export function rangeGameMarkup() {
     </div>
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">${t("Ruchome tarcze.")}</h2>
-      <p data-range-message>${t("Masz")} ${STAGE_SECONDS} ${t("sekund na etap. Etap 2 zaczyna się przy")} ${STAGES[1].points} ${t("pkt, a etap 3 przy")} ${STAGES[2].points} ${t("pkt. Celuj myszą i kliknij albo dotknij tarczy.")}</p>
+      <p data-range-message>${t("Masz")} ${STAGE_SECONDS} ${t("sekund na etap. Etap 2 zaczyna się przy")} ${STAGES[1].points} ${t("pkt, a etap 3 przy")} ${STAGES[2].points} ${t("pkt. Celuj myszą i kliknij albo dotknij tarczy.")} ${t("Zwykła tarcza: 20–100 pkt, im bliżej środka, tym więcej. Mała, jasna tarcza: 200 pkt.")}</p>
       <button type="button" class="btn light range-play" data-range-play hidden>${t("Graj")}</button>
       <button type="button" class="range-utility" data-range-skip>${t("Pomiń intro")}</button>
     </div>
@@ -43,10 +46,11 @@ export function rangeGameMarkup() {
   </section>`;
 }
 
-function newTarget(at, stage) {
+function newTarget(at, stage, bonus = false) {
   const difficulty = STAGES[stage - 1];
   const direction = Math.random() < .5 ? -1 : 1;
   return {
+    bonus,
     born: at,
     life: between(...difficulty.life),
     x: between(.12, .88),
@@ -54,14 +58,14 @@ function newTarget(at, stage) {
     velocity: direction * between(.095, .23) * difficulty.speed,
     wave: between(0, Math.PI * 2),
     drift: between(.025, .075) * difficulty.drift,
-    size: between(.84, 1.15) * difficulty.size,
+    size: between(.84, 1.15) * difficulty.size * (bonus ? .62 : 1),
   };
 }
 
 function targetPose(target, elapsed, width, height) {
   const age = elapsed - target.born;
   const x = target.x + target.velocity * age;
-  const radius = clamp(width * .025, 17, 30) * target.size;
+  const radius = Math.max(10, clamp(width * .025, 17, 30) * target.size);
   const edge = Math.max(.08, (radius + 2) / width);
   // Bounce inside the lane so even the quickest targets stay reachable.
   const lane = 1 - edge * 2;
@@ -196,22 +200,32 @@ export function mountRangeGame(root) {
     if (opacity <= 0) return;
     context.save();
     context.globalAlpha = opacity;
-    context.lineWidth = 2;
-    context.fillStyle = '#1a2021';
-    context.strokeStyle = '#ffce80';
+    context.lineWidth = target.bonus ? 2 : 1.5;
+    context.fillStyle = target.bonus ? '#e1fff5' : '#1a2021';
+    context.strokeStyle = target.bonus ? '#68ffdc' : '#ffce80';
     context.beginPath();
     context.arc(x, y, radius, 0, Math.PI * 2);
     context.fill();
     context.stroke();
-    context.globalAlpha = opacity * .8;
-    context.beginPath();
-    context.arc(x, y, radius * .67, 0, Math.PI * 2);
-    context.stroke();
-    context.globalAlpha = opacity;
-    context.fillStyle = '#ffce80';
-    context.beginPath();
-    context.arc(x, y, radius * .34, 0, Math.PI * 2);
-    context.fill();
+    if (target.bonus) {
+      context.fillStyle = '#12483f';
+      context.font = `bold ${Math.max(9, radius * .7)}px sans-serif`;
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(String(BONUS_POINTS), x, y);
+    } else {
+      context.globalAlpha = opacity * .75;
+      for (let ring = TARGET_RINGS - 1; ring > 1; ring--) {
+        context.beginPath();
+        context.arc(x, y, radius * ring / TARGET_RINGS, 0, Math.PI * 2);
+        context.stroke();
+      }
+      context.globalAlpha = opacity;
+      context.fillStyle = '#ffce80';
+      context.beginPath();
+      context.arc(x, y, radius / TARGET_RINGS, 0, Math.PI * 2);
+      context.fill();
+    }
     context.restore();
   }
 
@@ -312,7 +326,7 @@ export function mountRangeGame(root) {
       return;
     }
     if (elapsed >= nextTarget) {
-      targets.push(newTarget(elapsed, stage));
+      targets.push(newTarget(elapsed, stage, Math.random() < .2));
       nextTarget = elapsed + between(.52, .95);
     }
     targets = targets.filter(target => elapsed - target.born < target.life);
@@ -327,6 +341,7 @@ export function mountRangeGame(root) {
 
   function startStage(number) {
     stage = number;
+    root.dataset.stage = String(number);
     elapsed = 0;
     noticeTime = number === 1 ? 0 : STAGE_NOTICE_SECONDS;
     stageNotice.textContent = noticeTime ? `STAGE ${number}` : '';
@@ -385,7 +400,8 @@ export function mountRangeGame(root) {
       const target = targetPose(targets[index], elapsed, width, height);
       const distance = Math.hypot(aim.x * width - target.x, aim.y * height - target.y);
       if (target.opacity < .2 || distance > target.radius) continue;
-      const points = distance <= target.radius * .35 ? 100 : 50;
+      const ring = Math.min(TARGET_RINGS - 1, Math.floor(distance / target.radius * TARGET_RINGS));
+      const points = targets[index].bonus ? BONUS_POINTS : (TARGET_RINGS - ring) * POINTS_PER_RING;
       hits++;
       score += points;
       if (score > record) {

@@ -1,4 +1,4 @@
-import {englishText, englishNews} from './english.js?v=20261107-import';
+import {englishText, englishNews} from './english.js?v=20261108-range-targets';
 
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],

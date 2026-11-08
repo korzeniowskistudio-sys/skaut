@@ -1,5 +1,5 @@
 import {t} from './i18n.js?v=20261107-import';
-import {rangeGameMarkup} from './range-game.js?v=20261107-english';
+import {rangeGameMarkup} from './range-game.js?v=20261108-range-targets';
 
 // Positions follow the 3 × 2 studio contact sheets.
 const gadgets = [

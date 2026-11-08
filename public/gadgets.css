@@ -29,6 +29,10 @@
 }
 .range-art { object-fit: cover; object-position: 36% center; }
 .range-art--arena { object-position: center; }
+.range-game[data-stage="2"] .range-art--arena { filter: saturate(.75) contrast(1.1) brightness(.97); }
+.range-game[data-stage="3"] .range-art--arena { filter: sepia(.4) contrast(1.13) brightness(.9); }
+.range-game[data-stage="2"] { --range-stage-light: linear-gradient(120deg, #4299c444, transparent 65%); }
+.range-game[data-stage="3"] { --range-stage-light: linear-gradient(235deg, #cc743c44, transparent 65%); }
 .range-canvas { outline-offset: -4px; }
 .range-game[data-phase="playing"] .range-canvas {
   cursor: none;
@@ -44,7 +48,8 @@
               linear-gradient(90deg, #090e115f, transparent 65%);
 }
 .range-game[data-phase="playing"]::after {
-  background: linear-gradient(180deg, #090e1199, transparent 21%, transparent 84%, #090e1160);
+  background: linear-gradient(180deg, #090e1199, transparent 21%, transparent 84%, #090e1160),
+              var(--range-stage-light, linear-gradient(transparent, transparent));
 }
 .range-stage-notice {
   position: absolute;

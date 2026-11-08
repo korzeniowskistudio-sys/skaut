@@ -1,5 +1,6 @@
 // English interface copy. Source text is also the Polish fallback.
 export const englishText = {
+  "Zwykła tarcza: 20–100 pkt, im bliżej środka, tym więcej. Mała, jasna tarcza: 200 pkt.": "Regular targets score 20–100 points. Aim closer to the centre for more. Small, bright targets score 200.",
   "Opcje dodatkowe": "Extras",
   "od": "from",
   "Szczegóły wydarzenia": "Event details",
