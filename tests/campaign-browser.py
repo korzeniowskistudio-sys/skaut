@@ -10,7 +10,7 @@ from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 ORIGIN = os.environ.get('SKAUT_GALLERY_ORIGIN', 'http://127.0.0.1:4173').rstrip('/')
 OUTPUT = ROOT / 'artifacts/gallery'
-LICENCE_IMAGE = '/assets/campaign/licencja-klubowa-badge-1100.webp'
+CALENDAR_IMAGE = '/assets/calendar-2027/kalendarz-skaut-2027-preview.webp'
 NEWS_IMAGES = ['02', '03', '04', '05', '07', '08', '11', '12', '13', '14', '15', '16', '17', '18', '19']
 
 
@@ -42,24 +42,25 @@ def main():
             page.on('response', lambda response: failed_images.append(response.url) if response.request.resource_type == 'image' and response.status >= 400 else None)
             page.goto(ORIGIN + '/', wait_until='networkidle')
             home = page.locator('main img').evaluate_all('images=>images.map(image=>image.getAttribute("src"))')
-            assert home == ['/assets/hero.webp', LICENCE_IMAGE, supplied['photo-06']['src']], home
+            assert home == ['/assets/hero.webp', CALENDAR_IMAGE, supplied['photo-06']['src']], home
             assert len(set(home)) == 3
-            primary = [LICENCE_IMAGE, supplied['photo-06']['src']]
+            primary = [CALENDAR_IMAGE, supplied['photo-06']['src']]
             for selector, identity in [('.news-preview img', None), ('.image-story .home-photo-frame>img', 'photo-06')]:
                 state = loaded_image(page, page.locator(selector).first)
-                sources = {variant['src'] for variant in supplied[identity]['variants']} if identity else {LICENCE_IMAGE.replace('1100', str(width)) for width in (360, 720, 1100)}
+                sources = {variant['src'] for variant in supplied[identity]['variants']} if identity else {CALENDAR_IMAGE}
                 assert urlsplit(state['currentSrc']).path in sources
                 assert state['objectFit'] == 'cover'
 
             page.goto(ORIGIN + '/aktualnosci', wait_until='networkidle')
-            illustrated = page.locator('.news-item img')
+            illustrated = page.locator('.news-item img:not([src$="kalendarz-skaut-2027-preview.webp"])')
             expect(illustrated).to_have_count(15)
             actual_news = illustrated.evaluate_all('images=>images.map(image=>image.getAttribute("src"))')
             assert actual_news == expected_news, actual_news
             assert len(set(actual_news)) == 15
-            first_article = page.locator('.news-item a').first.get_attribute('href')
-            last_article = page.locator('.news-item a').nth(14).get_attribute('href')
-            older_article = page.locator('.news-item a').nth(15).get_attribute('href')
+            campaign_articles = page.locator('.news-item a:not([href$="/kalendarz-skaut-2027"])')
+            first_article = campaign_articles.first.get_attribute('href')
+            last_article = campaign_articles.nth(14).get_attribute('href')
+            older_article = campaign_articles.nth(15).get_attribute('href')
             page.locator('#news-search').fill('Licencja klubowa 2027')
             expect(page.locator('.news-item img')).to_have_count(1)
             expect(page.locator('.news-item img')).to_have_attribute('src', expected_news[0])
@@ -90,7 +91,7 @@ def main():
             assert len(set(primary)) == 4
             expected_sources = {photo['src'] for photo in supplied.values()}
             expected_sources.remove(supplied['photo-01']['src'])
-            expected_sources.add(LICENCE_IMAGE)
+            expected_sources.add(CALENDAR_IMAGE)
             assert set(primary + actual_news) == expected_sources, 'Campaign image missing or repeated'
             assert not errors, errors
             assert not failed_images, failed_images

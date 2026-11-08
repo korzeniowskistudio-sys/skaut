@@ -1,5 +1,9 @@
 // English interface copy. Source text is also the Polish fallback.
 export const englishText = {
+  "Kalendarz trójdzielny SKAUT 2027": "SKAUT 2027 three-month wall calendar",
+  "Otwórz podgląd w pełnym rozmiarze": "View full-size artwork",
+  "Zobacz kalendarz w sklepie": "View the calendar in the shop",
+  "Klubowy kalendarz ścienny z ilustracją SKAUT i trzema bloczkami. Podgląd pokazuje grudzień 2026, styczeń i luty 2027.": "A club wall calendar with SKAUT artwork and three month pads. The preview shows December 2026, January and February 2027.",
   "{0} s na etap. Etap 2 od {1} pkt, etap 3 od {2} pkt.": "{0} s per stage. Stage 2 at {1} points, Stage 3 at {2}.",
   "Kliknij lub dotknij tarczy.": "Click or tap a target.",
   "Celność daje 20–100 pkt. Jasna tarcza daje 200 pkt.": "Accuracy earns 20–100 points. Bright targets give 200.",
@@ -563,6 +567,13 @@ export const englishText = {
 
 // Summaries of selected imported club posts. The official articles remain in Polish.
 export const englishNews = {
+  "skaut-kalendarz-2027": {
+    "sourceTitle": "Kalendarz trójdzielny SKAUT 2027",
+    "sourceSummary": "Klubowy kalendarz ścienny na 2027 rok. Zobacz ilustrację SKAUT i czytelny podgląd trzech miesięcy.",
+    "title": "SKAUT 2027 three-month wall calendar",
+    "summary": "See the 2027 club wall calendar with SKAUT artwork and a clear three-month preview.",
+    "body": "The calendar shows three months at once. This preview covers December 2026, January and February 2027. Each pad includes week numbers and highlights holidays."
+  },
   "wp-9200": {
     "sourceTitle": "Licencja klubowa 2027 i licencje zawodnicze.",
     "sourceSummary": "Zawiadamiamy, że Stowarzyszenie Klub Strzelecki SKAUT otrzymało licencję klubową na 2027 rok.Można więc składać wnioski o licencje zawodnicze. Szczegółowa procedura znajduje się tutaj:",

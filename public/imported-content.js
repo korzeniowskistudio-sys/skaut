@@ -1,5 +1,5 @@
-import {t, english, locale, sitePath} from './i18n.js?v=20261107-import';
-import {date, esc, money, empty, intro, scheduleKinds} from './ui.js?v=20261107-import';
+import {t, english, locale, sitePath} from './i18n.js?v=20261108-calendar-product';
+import {date, esc, money, empty, intro, scheduleKinds, clubCalendar, clubCalendarArtwork} from './ui.js?v=20261108-calendar-product';
 
 const root = '/zbrojownia/';
 const version = '20261107-import';
@@ -7,6 +7,13 @@ const requests = new Map();
 const today = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Warsaw'}).format(new Date());
 const icon = name => '<i class="ph ph-'+name+'" aria-hidden="true"></i>';
 const label = name => esc(t(name));
+const calendarProduct = {
+  path:clubCalendar.path,
+  title:t('Kalendarz trójdzielny SKAUT 2027'),
+  image:clubCalendar.preview,
+  lang:english?'en':'pl',
+  body:'<p>'+label('Klubowy kalendarz ścienny z ilustracją SKAUT i trzema bloczkami. Podgląd pokazuje grudzień 2026, styczeń i luty 2027.')+'</p>',
+};
 
 function read(name) {
   if (!requests.has(name)) {
@@ -42,7 +49,7 @@ function languageNote() {
 function productCard(product, heading) {
   return '<article class="news-item imported-product"><a href="'+esc(sitePath(product.path))+'">'+
     (product.image?'<img src="'+esc(product.image)+'" alt="" loading="lazy" decoding="async" width="600" height="400">':'')+
-    '<'+heading+' lang="pl">'+esc(product.title)+'</'+heading+'>'+
+    '<'+heading+' lang="'+esc(product.lang||'pl')+'">'+esc(product.title)+'</'+heading+'>'+
     (Number.isInteger(product.price)?'<p>'+esc(money(product.price))+'</p>':'')+
     '<span class="text-link">'+label('Zobacz produkt')+' '+icon('arrow-up-right')+'</span></a></article>';
 }
@@ -54,7 +61,7 @@ function productGrid(products, heading = 'h2') {
 
 export async function importedGadgetsGrid() {
   const {products}=await read('index');
-  return productGrid(products,'h3');
+  return productGrid([calendarProduct,...products],'h3');
 }
 
 function eventListEntry(event) {
@@ -120,7 +127,7 @@ function shopPage(products,pages) {
     title:t('Sklep klubowy'),
     html:intro(t('Sklep klubowy'),t('Oryginalna odzież i gadżety SKAUT.'))+
       '<section class="content imported-content">'+languageNote()+
-      productGrid(products)+
+      productGrid([calendarProduct,...products])+
       '<div class="imported-documents"><h2>'+label('Informacje o sklepie')+'</h2><ul>'+
       pages.map(page=>'<li><a lang="pl" href="'+esc(sitePath(page.path))+'">'+esc(page.title)+'</a></li>').join('')+'</ul></div></section>',
   };
@@ -137,6 +144,8 @@ function publishedOptions(items,heading) {
 function detailPage(item,section) {
   const isEvent=section==='events';
   const isProduct=section==='products';
+  const isCalendar=item===calendarProduct;
+  const lang=item.lang||'pl';
   const past=isEvent&&item.day<today();
   const back=isEvent?localLink('/wydarzenia','Wszystkie wydarzenia'):localLink('/sklep','Sklep klubowy');
   const metadata=isEvent?[
@@ -145,7 +154,7 @@ function detailPage(item,section) {
     item.organizer?'<span lang="pl">'+esc(item.organizer)+'</span>':'',
     Number.isInteger(item.price)?'<span>'+(item.priceFrom?label('od')+' ':'')+esc(money(item.price))+'</span>':'',
   ].filter(Boolean).join('<span aria-hidden="true">·</span>'):'';
-  const images=item.images?.length?'<div class="imported-pictures">'+item.images.map((url,i)=>
+  const images=isCalendar?clubCalendarArtwork():item.images?.length?'<div class="imported-pictures">'+item.images.map((url,i)=>
     '<img src="'+esc(url)+'" alt="" '+(i?'loading="lazy" ':'')+'decoding="async">').join('')+'</div>':'';
   const contact=!past&&(isEvent||isProduct)?'<div class="booking-source"><p>'+label(isEvent?'W sprawie zapisów skontaktuj się z klubem.':'W sprawie zamówień skontaktuj się z klubem.')+
     '</p><a class="btn secondary" href="mailto:zbrojownia@ksskaut.pl?subject='+encodeURIComponent(item.title)+'">'+label('Napisz do klubu')+'</a></div>':'';
@@ -153,16 +162,17 @@ function detailPage(item,section) {
     title:item.title,
     html:'<article class="article imported-content">'+back+
       (past?'<p class="imported-tag">'+label('Wydarzenie archiwalne')+'</p>':'')+
-      '<h1 lang="pl">'+esc(item.title)+'</h1>'+
-      (metadata?'<div class="meta">'+metadata+'</div>':'')+languageNote()+images+
+      '<h1 lang="'+lang+'">'+esc(item.title)+'</h1>'+
+      (metadata?'<div class="meta">'+metadata+'</div>':'')+(isCalendar?'':languageNote())+images+
       (Number.isInteger(item.price)&&isProduct?'<p class="lead">'+esc(money(item.price))+'</p>':'')+
-      contact+(item.body?'<div class="prose imported-body" lang="pl">'+item.body+'</div>':'')+
+      contact+(item.body?'<div class="prose imported-body" lang="'+lang+'">'+item.body+'</div>':'')+
       publishedOptions(item.tickets,'Opublikowane opcje udziału')+
       publishedOptions(item.extras,'Opcje dodatkowe')+publishedOptions(item.variants,'Warianty produktu')+'</article>',
   };
 }
 
 export async function importedPage(path) {
+  if(path===calendarProduct.path)return detailPage(calendarProduct,'products');
   const index=await read('index');
   if(path==='/wydarzenia')return eventsPage(index.events);
   if(path==='/sklep'||path==='/sklep/informacje/ubrania-i-gadzety')return shopPage(index.products,index.pages);

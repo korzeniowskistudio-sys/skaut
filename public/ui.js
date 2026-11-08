@@ -1,5 +1,19 @@
-import {t, english, locale, sitePath} from './i18n.js?v=20261107-import';
+import {t, english, locale, sitePath} from './i18n.js?v=20261108-calendar-product';
 export const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export const clubCalendar = {
+  id:'skaut-kalendarz-2027',
+  path:'/sklep/kalendarz-skaut-2027',
+  preview:'/assets/calendar-2027/kalendarz-skaut-2027-preview.webp',
+  artwork:'/assets/calendar-2027/kalendarz-skaut-2027.webp',
+};
+
+export function clubCalendarArtwork() {
+  const title=esc(t('Kalendarz trójdzielny SKAUT 2027'));
+  return `<a class="club-calendar-artwork" href="${clubCalendar.artwork}" target="_blank" rel="noopener">
+    <img src="${clubCalendar.artwork}" alt="${title}" width="1156" height="3015" decoding="async">
+    <span class="text-link">${t('Otwórz podgląd w pełnym rozmiarze')}</span>
+  </a>`;
+}
 const campaignImages=new Set(['/assets/hero.webp','/assets/range-front.webp','/assets/range-side.webp']);
 export function campaignImageAttrs(src,sizes){let stem;if(campaignImages.has(src))stem='/assets/optimized/'+src.slice('/assets/'.length,-'.webp'.length);else{const match=typeof src==='string'&&src.match(/^(\/assets\/campaign\/(?:photo-(?:0[1-9]|1[0-9])|licencja-klubowa-badge))-(?:360|720|1100)\.webp$/);if(!match)return '';stem=match[1];}return `srcset="${[360,720,1100].map(width=>`${stem}-${width}.webp ${width}w`).join(', ')}" sizes="${esc(sizes)}"`;}
 // Fixed source-post IDs preserve the image assignment during filtering and search.

@@ -19,6 +19,8 @@
 .imported-options li b{white-space:nowrap}
 .imported-tag{font-size:.85rem;color:var(--muted);margin-bottom:0}
 .imported-pictures img,.imported-body img{display:block;max-width:100%;height:auto;max-height:34rem;object-fit:contain;margin:20px auto}
+.club-calendar-artwork{display:block;text-align:center;margin:24px 0}
+.article .club-calendar-artwork img{display:block;width:100%;height:auto;max-height:720px;object-fit:contain;margin:0 auto 12px;background:#e1e4e7}
 .imported-body table{display:block;overflow-x:auto;max-width:100%}
 .imported-content :is(h1,h2,strong,a){overflow-wrap:anywhere}
 @media(max-width:680px){

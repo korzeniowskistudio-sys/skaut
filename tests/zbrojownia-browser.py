@@ -52,8 +52,9 @@ with sync_playwright() as p:
 
         shop='/en/shop' if english else '/sklep'
         page.goto(origin+shop)
-        expect(page.locator('.imported-product')).to_have_count(16)
-        product=page.locator('.imported-product a').first
+        expect(page.locator('.imported-product')).to_have_count(len(index['products'])+1)
+        expect(page.locator('.imported-product a').first).to_have_attribute('href',shop+'/kalendarz-skaut-2027')
+        product=page.locator('.imported-product a').nth(1)
         expect(product.locator('img')).to_be_visible()
         product.click()
         expect(page.locator('main .imported-pictures img').first).to_be_visible()
