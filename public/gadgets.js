@@ -1,5 +1,4 @@
 import {t} from './i18n.js?v=20261107-import';
-import {rangeGameMarkup} from './range-game.js?v=20261108-range-banner';
 
 // Positions follow the 3 × 2 studio contact sheets.
 const gadgets = [
@@ -103,7 +102,7 @@ function card(index, basket, featured = false) {
 
 export function gadgetsMarkup(basket = [], officialProducts = '') {
   return `<div class="gadgets-page">
-    ${rangeGameMarkup()}
+    <div data-gadgets-game></div>
     <section class="gadgets-catalogue" aria-labelledby="gadgets-title">
       <header class="gadgets-intro">
         <div><p class="gadgets-kicker">${t("Kolekcja klubowa")}</p><h1 id="gadgets-title">${t("Gadżety SKAUT.")}</h1></div>

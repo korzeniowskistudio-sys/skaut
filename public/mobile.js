@@ -4,6 +4,7 @@ const tabs = [
   {path: '/treningi', label: t('Treningi'), icon: 'target'},
   {path: '/kalendarz', label: t('Kalendarz'), icon: 'calendar-blank'},
   {path: '/galeria', label: t('Galeria'), icon: 'images'},
+  {path: '/gadzety', label: t('Gadżety'), icon: 'shopping-bag'},
   {path: '/moj-skaut', label: t('Konto'), icon: 'user-circle'},
 ];
 
@@ -31,7 +32,9 @@ export function initMobileNavigation() {
   }
   document.body.classList.add('has-mobile-navigation');
   update(window.location.pathname);
-  return {update};
+  // Match the bottom bar breakpoint in mobile.css, including phone landscape.
+  const media = window.matchMedia('(max-width:780px), (pointer:coarse) and (max-width:1100px) and (max-height:600px)');
+  return {update,media};
 }
 
 /** Query strings do not change the selected section; unrelated archives have none. */

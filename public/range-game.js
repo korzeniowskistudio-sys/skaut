@@ -1,4 +1,4 @@
-import {t, tr} from './i18n.js?v=20261108-range-leaderboard';
+import {t, tr} from './i18n.js?v=20261110-bonus-crest';
 import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
 import {STAGES,STAGE_SECONDS,STAGE_NOTICE_SECONDS,TARGET_RINGS,BONUS_POINTS,CLOCK_SECONDS,SHOT_INTERVAL,
   clamp,targetPose,createRandom,createStage,advanceTargets,takeShot} from './range-engine.js?v=20261108-range-leaderboard';
@@ -19,7 +19,7 @@ export function rangeGameMarkup() {
     <div class="range-overlay" data-range-overlay>
       <h2 id="range-game-title">${t("Ruchome tarcze.")}</h2>
       <p data-range-message>${stageGuide} ${t("Kliknij lub dotknij tarczy.")}
-        ${t("Celność daje 20–100 pkt. Jasna tarcza daje 200 pkt.")} ${clockGuide}</p>
+        ${t("Celność daje 20–100 pkt. Tarcza z logo SKAUT daje 200 pkt.")} ${clockGuide}</p>
       <button type="button" class="btn light range-play" data-range-play hidden>${t("Graj")}</button>
       <button type="button" class="range-utility" data-range-skip>${t("Pomiń intro")}</button>
     </div>
@@ -71,6 +71,7 @@ export function mountRangeGame(root, request) {
   const options = {signal: controller.signal};
   const leaderboard = mountRangeLeaderboard(leaderboardPanel,request,controller.signal);
   const sprite = new Image();
+  const bonusCrest = new Image();
   let phase = 'intro';
   let introTimer = 0;
   let introStarted = false;
@@ -105,6 +106,7 @@ export function mountRangeGame(root, request) {
     if (assetsStarted) return;
     assetsStarted = true;
     sprite.src = ASSETS + 'hands.webp';
+    bonusCrest.src = '/assets/optimized/skaut-logo-144.png';
   }
 
   function setPhase(next) {
@@ -171,6 +173,13 @@ export function mountRangeGame(root, request) {
     const {kind} = target;
     context.save();
     context.globalAlpha = opacity;
+    if (kind === 'bonus' && bonusCrest.naturalWidth) {
+      context.shadowColor = '#b8ffe8';
+      context.shadowBlur = Math.max(3, radius * .32);
+      context.drawImage(bonusCrest, x - radius, y - radius, radius * 2, radius * 2);
+      context.restore();
+      return;
+    }
     context.lineWidth = kind === 'regular' ? 1.5 : 2;
     context.fillStyle = kind === 'clock' ? '#eaf7ff' : kind === 'bonus' ? '#e1fff5' : '#1a2021';
     context.strokeStyle = kind === 'clock' ? '#7ec9ff' : kind === 'bonus' ? '#68ffdc' : '#ffce80';

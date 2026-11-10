@@ -24,7 +24,7 @@ export const englishText = {
   "Klubowy kalendarz ścienny z ilustracją SKAUT i trzema bloczkami. Podgląd pokazuje grudzień 2026, styczeń i luty 2027.": "A club wall calendar with SKAUT artwork and three month pads. The preview shows December 2026, January and February 2027.",
   "{0} s na etap. Etap 2 od {1} pkt, etap 3 od {2} pkt.": "{0} s per stage. Stage 2 at {1} points, Stage 3 at {2}.",
   "Kliknij lub dotknij tarczy.": "Click or tap a target.",
-  "Celność daje 20–100 pkt. Jasna tarcza daje 200 pkt.": "Accuracy earns 20–100 points. Bright targets give 200.",
+  "Celność daje 20–100 pkt. Tarcza z logo SKAUT daje 200 pkt.": "Accuracy earns 20–100 points. SKAUT crest targets give 200.",
   "Zegar w etapie 3: +{0} s.": "Stage 3 clock: +{0} s.",
   "Zwykła tarcza: 20–100 pkt, im bliżej środka, tym więcej. Mała, jasna tarcza: 200 pkt.": "Regular targets score 20–100 points. Aim closer to the centre for more. Small, bright targets score 200.",
   "Opcje dodatkowe": "Extras",

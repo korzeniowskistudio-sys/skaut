@@ -1,4 +1,4 @@
-import {englishText, englishNews} from './english.js?v=20261108-news-bulletin';
+import {englishText, englishNews} from './english.js?v=20261110-bonus-crest';
 
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],

@@ -1,7 +1,7 @@
-import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261108-news-bulletin';
+import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261110-bonus-crest';
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
-import {initMobileNavigation} from './mobile.js?v=20261107-english';
+import {initMobileNavigation} from './mobile.js?v=20261110-gadgets';
 import {esc,money,date,time,kinds,statuses,field,empty,intro,finder,eventRow,newsItem,achievements,booking,campaignImageAttrs,campaignNewsImage,trainingTypeIcon,sampleEventRow,scheduleKinds,scheduleNotice,importedEventRow,clubCalendar,clubCalendarArtwork} from './ui.js?v=20261108-calendar-news';
 initLanguage();
 const main=document.querySelector('main');
@@ -19,7 +19,8 @@ function savedIds(key) {
 }
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
-const loadGadgets = () => import('./gadgets.js?v=20261108-range-banner');
+const loadGadgets = () => import('./gadgets.js?v=20261110-mobile');
+const loadRangeGame = () => import('./range-game.js?v=20261110-bonus-crest').catch(() => null);
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
@@ -243,14 +244,36 @@ async function adminPage(seq){if(!session.member){loginPage();return;}const data
 async function galleryPage(seq){const {renderGallery}=await import('./gallery.js?v=20261107-english');if(seq!==routeNumber)return;document.title=t('Galeria — SKAUT');const cleanup=await renderGallery({main,isCurrent:()=>seq===routeNumber});if(seq===routeNumber)galleryCleanup=cleanup;else cleanup();}
 
 async function gadgetsPage(seq) {
- const [{gadgetsMarkup}, {mountRangeGame}, officialProducts] = await Promise.all([
+ const {media} = mobileNavigation;
+ const [{gadgetsMarkup}, initialGame, officialProducts] = await Promise.all([
   loadGadgets(),
-  import('./range-game.js?v=20261108-range-banner'),
+  media.matches ? null : loadRangeGame(),
   loadImportedContent().then(content => content.importedGadgetsGrid()).catch(() => ''),
  ]);
  if (seq !== routeNumber) return;
  display(gadgetsMarkup(gadgetBasket, officialProducts), t('Gadżety klubowe'));
- rangeGameCleanup = mountRangeGame(main.querySelector('[data-range-game]'),api);
+ const slot = main.querySelector('[data-gadgets-game]');
+ const controller = new AbortController();
+ let game = initialGame;
+ let unmountGame;
+ async function syncGame() {
+  if (media.matches) {
+   unmountGame?.();
+   unmountGame = null;
+   slot.replaceChildren();
+   return;
+  }
+  if (!game) game = await loadRangeGame();
+  if (!game || controller.signal.aborted || media.matches || unmountGame) return;
+  slot.innerHTML = game.rangeGameMarkup();
+  unmountGame = game.mountRangeGame(slot.firstElementChild,api);
+ }
+ media.addEventListener('change',syncGame,{signal:controller.signal});
+ rangeGameCleanup = () => {
+  controller.abort();
+  unmountGame?.();
+ };
+ void syncGame();
  main.querySelectorAll('[data-gadget-add]').forEach(button => button.addEventListener('click', () => {
   const id = button.dataset.gadgetAdd;
   if (gadgetBasket.includes(id)) {

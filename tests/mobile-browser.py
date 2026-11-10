@@ -45,6 +45,14 @@ def main():
                 expect(navigation).not_to_be_visible()
                 assert page.locator('.header').evaluate('header=>getComputedStyle(header).position') == 'relative'
                 assert page.locator('.header').bounding_box()['height'] == 104
+                page.goto(ORIGIN + '/gadzety')
+                game = page.locator('[data-range-game]')
+                expect(game.get_by_role('button', name='Graj', exact=True)).to_be_visible()
+                page.set_viewport_size({'width': 390, 'height': 844})
+                expect(game).to_have_count(0)
+                expect(navigation.locator('[aria-current=page]')).to_have_attribute('href', '/gadzety')
+                page.set_viewport_size({'width': profile['width'], 'height': profile['height']})
+                expect(game.get_by_role('button', name='Graj', exact=True)).to_be_visible()
                 assert not errors, errors
                 result['profiles'].append({**profile, 'result': 'desktop unchanged', 'pageErrors': errors})
                 context.close()
@@ -59,11 +67,11 @@ def main():
                 labelWidth:link.querySelector('span').getBoundingClientRect().width,
                 fontSize:getComputedStyle(link).fontSize
             }))''')
-            assert len(targets) == 5
+            assert len(targets) == 6
             for target in targets:
                 assert target['width'] >= 44 and target['height'] >= 44, target
                 assert target['labelWidth'] <= target['width'], target
-                assert target['fontSize'] == '12px', target
+                assert 10 <= float(target['fontSize'].removesuffix('px')) <= 12, target
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), f'Overflow at {profile}'
             page.evaluate('window.scrollTo({top:document.documentElement.scrollHeight,behavior:"instant"})')
             page.evaluate('new Promise(requestAnimationFrame)')
@@ -82,6 +90,15 @@ def main():
                 page.screenshot(path=str(screenshot))
                 result['screenshots'].append(str(screenshot))
             page.locator('#menu-toggle').click()
+
+            game_requests = []
+            page.on('request', lambda request: game_requests.append(request.url)
+                    if any(path in request.url for path in ('/range-game.js', '/assets/range-game/', '/api/range/')) else None)
+            navigation.get_by_role('link', name='Gadżety', exact=True).click()
+            expect(navigation.locator('[aria-current=page]')).to_have_attribute('href', '/gadzety')
+            expect(page.locator('#gadgets-title')).to_be_visible()
+            expect(page.locator('[data-range-game]')).to_have_count(0)
+            assert not game_requests, game_requests
 
             navigation.locator('a[href="/kalendarz"]').click()
             expect(navigation.locator('[aria-current=page]')).to_have_attribute('href', '/kalendarz')
@@ -111,17 +128,25 @@ def main():
                 result['screenshots'].append(str(screenshot))
 
             # Real archive navigation starts a new document and has no matching
-            # bottom tab. The menu and five links remain available there.
+            # bottom tab. The same six links are available there.
             page.goto(ORIGIN + '/archiwum/kontakt.html', wait_until='networkidle')
             expect(page.locator('#mobile-navigation')).to_have_count(1)
+            expect(page.locator('#mobile-navigation a')).to_have_count(6)
             expect(page.locator('#mobile-navigation [aria-current=page]')).to_have_count(0)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
             expect(page.get_by_role('navigation', name='Główna nawigacja mobilna', exact=True)).to_be_visible()
+            if profile['width'] == 320:
+                page.goto(ORIGIN + '/en/gadgets')
+                expect(navigation.get_by_role('link', name='Gear', exact=True)).to_have_attribute('aria-current', 'page')
+                expect(page.locator('#gadgets-title')).to_be_visible()
+                expect(page.locator('[data-range-game]')).to_have_count(0)
+                assert navigation.locator('a').evaluate_all('''links=>links.every(link=>
+                    link.querySelector('span').getBoundingClientRect().width <= link.getBoundingClientRect().width)''')
             assert not errors, errors
             result['profiles'].append({
                 **profile, 'result': 'passed', 'tabTargets': targets, 'barHeight': bar['height'],
                 'checks': ['sticky header', 'visible footer', 'scrollable menu', 'sound in menu',
-                           'distinct active tabs', 'touch controls', 'keyboard link',
+                           'distinct active tabs', 'mobile gadget catalogue without game', 'touch controls', 'keyboard link',
                            'gallery modal focus', 'archive navigation'],
                 'pageErrors': errors,
             })

@@ -4,8 +4,9 @@
   body.has-mobile-navigation{--mobile-nav-height:calc(68px + env(safe-area-inset-bottom,0px));padding-bottom:var(--mobile-nav-height)}
   body.has-mobile-navigation.has-demo{padding-bottom:calc(var(--mobile-nav-height) + 64px)}
   html:has(body.has-mobile-navigation){scroll-padding-top:calc(88px + env(safe-area-inset-top,0px));scroll-padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  .has-mobile-navigation .mobile-navigation{position:fixed;z-index:40;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:var(--mobile-nav-height);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));background:var(--navy);color:#d4deeb;border-top:1px solid var(--blue)}
-  .mobile-navigation a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;padding:5px 1px;color:inherit;font-size:12px;font-weight:600;line-height:1.35;text-decoration:none;white-space:nowrap;touch-action:manipulation}
+  .has-mobile-navigation .mobile-navigation{position:fixed;z-index:40;left:0;right:0;bottom:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);height:var(--mobile-nav-height);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));background:var(--navy);color:#d4deeb;border-top:1px solid var(--blue)}
+  [data-gadgets-game]{display:none}
+  .mobile-navigation a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:52px;padding:5px 1px;color:inherit;font-size:clamp(10px,3.25vw,12px);font-weight:600;line-height:1.35;text-decoration:none;white-space:nowrap;touch-action:manipulation}
   .mobile-navigation i.ph{font-size:23px;line-height:1}
   .mobile-navigation a[aria-current=page]{color:white}
   .mobile-navigation a[aria-current=page]:before{content:'';position:absolute;top:0;left:calc(50% - 12px);width:24px;height:2px;background:currentColor}
