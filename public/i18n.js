@@ -1,4 +1,4 @@
-import {englishText, englishNews} from './english.js?v=20261110-footer';
+import {englishText, englishNews} from './english.js?v=20261110-footer-contact';
 
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],

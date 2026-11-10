@@ -130,6 +130,9 @@
 }
 .footer-identity .footer-wordmark { display: block; }
 .footer--main { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.footer-contact h2 { font-size: 34px; margin-bottom: 12px; }
+.footer-contact address { display: grid; gap: 6px; font-style: normal; }
+.footer-contact a { display: inline-block; padding-block: 3px; text-underline-offset: .2em; }
 @media (max-width: 640px) {
   .footer--main { grid-template-columns: minmax(0, 1fr); }
   .footer-identity .footer-wordmark { font-size: clamp(48px, 13.5vw, 66px); }

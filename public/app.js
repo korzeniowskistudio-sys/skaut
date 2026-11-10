@@ -1,4 +1,4 @@
-import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261110-footer';
+import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261110-footer-contact';
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261110-gadgets';
