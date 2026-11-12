@@ -28,6 +28,4 @@
   background:#000 url('/assets/home-smoke-still.webp?v=20261107-smoke-volume') center bottom / cover no-repeat;
 }
 body:has(> #main > .hero) > .home-smoke{display:block}
-@media(prefers-reduced-motion:no-preference){
-  .home-smoke{background-image:url('/assets/home-smoke-loop.webp?v=20261107-smoke-volume')}
-}
+.home-smoke video{display:block;width:100%;height:100%;object-fit:cover;object-position:center bottom}

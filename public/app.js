@@ -1,4 +1,4 @@
-import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261110-footer-contact';
+import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261113-performance';
 import {createPageMotion} from './motion.js?v=20261107-english';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261110-gadgets';
@@ -51,7 +51,7 @@ function wireFinder(){on('#finder','submit',e=>{e.preventDefault();go('/treningi
 function wireAdds(){document.querySelectorAll('[data-add]').forEach(b=>b.addEventListener('click',()=>{if(basket.includes(b.dataset.add)){go('/koszyk');return;}if(basket.length>=10){toast(t('Koszyk może zawierać maksymalnie 10 wydarzeń.'));return;}mutateBasket([...basket,b.dataset.add]);b.textContent=t('W koszyku');b.classList.add('secondary');toast(t('Dodano trening do koszyka.'));}));}
 function display(html,title){main.innerHTML=html;localizeLinks(main);document.title=title+' — SKAUT';}
 
-const loadImportedContent=()=>import('./imported-content.js?v=20261108-calendar-product');
+const loadImportedContent=()=>import('./imported-content.js?v=20261113-performance');
 const getBookingSchedule=async()=>{
  if(session.demoMode)return {state:'demo',events:[]};
  try{return await (await loadImportedContent()).getImportedSchedule();}
@@ -108,31 +108,89 @@ function homeNews(stories) {
  </section>`;
 }
 
-async function home(seq){
+function home(seq){
+ const newsRequest=api('/news').catch(()=>[]);
+ const eventsRequest=api('/events');
  const scheduleRequest=getBookingSchedule();
- const [news,events]=await Promise.all([api('/news'),api('/events')]);
- if(seq!==routeNumber)return;
- const stories=orderNews(news).slice(0,2).map(localizedPost);
- display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section>${homeNews(stories)}<section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events>${events.length?events.slice(0,3).map(scheduleRow).join(''):session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):''}</div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu.")}<br>${t("Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();wireAdds();
- void scheduleRequest.then(({state,events:remote})=>{
-   if(seq!==routeNumber||state==='demo')return;
+ display(`<section class="hero"><div class="hero-photo"><img ${campaignImageAttrs('/assets/hero.webp','(max-width: 780px) 100vw, 62vw')} src="/assets/hero.webp" alt="${t("Dwoje sportowców w ochronnikach słuchu i okularach na strzelnicy — fotografia kampanijna")}" width="1672" height="941" loading="eager" decoding="async" fetchpriority="high"><h1>${t("Znajdź swój rytm.")}</h1></div><div class="finder"><h2>${t("Twój następny")}<br>${t("trening")}</h2><p>${t("Wybierz, co chcesz trenować.")}</p>${finder()}<a class="first-time" href="/klub">${t("Pierwszy raz? Zacznij tutaj")}</a></div></section><div data-home-news></div><section class="section"><div class="section-heading"><div><h2>${t("Spotkajmy się na treningu.")}</h2><p>${t("Znajdź termin i zaplanuj swój kolejny krok.")}</p></div><a href="/kalendarz" class="text-link">${t("Pełny kalendarz")} ${icon('arrow-up-right')}</a></div><div data-booking-preview>${session.demoMode?'':scheduleNotice('loading')}</div><div class="events-list" data-home-events></div></section><section class="image-story"><span class="home-photo-frame"><img ${campaignImageAttrs('/assets/campaign/photo-06-1100.webp','(max-width: 780px) 100vw, 50vw')} src="/assets/campaign/photo-06-1100.webp" alt="${t("Fotografia kampanijna SKAUT")}" loading="lazy" decoding="async" width="835" height="520"></span><div class="copy"><h2>${t("Twój cel.")}<br>${t("Twoja droga.")}</h2><p>${t("Treningi, postępy i ważne wiadomości — wszystko w jednym miejscu.")}<br>${t("Poznaj Mój SKAUT i zaplanuj swój rozwój.")}</p><a class="btn light" href="/moj-skaut">${t("Otwórz Mój SKAUT")} ${icon('arrow-up-right')}</a></div></section>`,t('Twój następny cel'));wireFinder();
+ const newsReady=newsRequest.then(news=>{
+   if(seq!==routeNumber)return;
+   const preview=main.querySelector('[data-home-news]');
+   preview.outerHTML=homeNews(orderNews(news).slice(0,2).map(localizedPost));
+   localizeLinks(main.querySelector('.news-preview'));
+ });
+ function showEvents(events, state) {
+   if(seq!==routeNumber)return;
    main.querySelector('[data-booking-preview]').innerHTML=scheduleNotice(state);
-   main.querySelector('[data-home-events]').innerHTML=mergeSchedule(events,remote).slice(0,3).map(scheduleRow).join('');
+   main.querySelector('[data-home-events]').innerHTML=events.length?events.slice(0,3).map(scheduleRow).join(''):
+    session.demoMode?empty(t('Nowe terminy wkrótce'),t('Zobacz przykładowy plan w kalendarzu. Aktualne terminy zapisów klub opublikuje w tym serwisie.')):'';
    const select=main.querySelector('#finder select[name="type"]');
-   for(const [value,label] of Object.entries(scheduleKinds(remote))){
+   for(const [value,label] of Object.entries(scheduleKinds(events))){
      if(![...select.options].some(option=>option.value===value))select.add(new Option(label,value));
    }
    wireAdds();
+ }
+ const localEvents=eventsRequest.catch(()=>[]);
+ void localEvents.then(events=>showEvents(events,session.demoMode?'demo':'loading'));
+ void Promise.all([localEvents,scheduleRequest]).then(([events,remote])=>{
+   showEvents(mergeSchedule(events,remote.events),remote.state);
  });
  const photo=main.querySelector('.hero-photo > img');
- if(photo)void import('./hero-motion.js?v=20261107-subject-motion').then(({mountHomePhotoMotion})=>{
-   if(seq!==routeNumber||!photo.isConnected)return;
-   heroMotionCleanup=mountHomePhotoMotion(main);
- }).catch(()=>{});
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const smoke=document.querySelector('.home-smoke');
+ const motionEvents=new AbortController();
+ let stopPhoto, video;
+ let timer;
+ function syncSmoke(){
+   if(reduced.matches || document.hidden){
+     video?.pause();
+     if(reduced.matches) video?.remove();
+     return;
+   }
+   if(!video){
+     video=document.createElement('video');
+     video.muted=true;
+     video.loop=true;
+     video.playsInline=true;
+     video.src='/assets/home-smoke-compact.mp4';
+   }
+   if(!video.isConnected) smoke.append(video);
+   void video.play().catch(()=>{});
+ }
+ void photo.decode().catch(()=>{}).then(()=>{
+   if(seq!==routeNumber)return;
+   function startPhotoMotion(){
+     if(reduced.matches || stopPhoto)return;
+     void newsReady.then(()=>import('./hero-motion.js?v=20261107-subject-motion')).then(({mountHomePhotoMotion})=>{
+       if(seq===routeNumber && !stopPhoto)stopPhoto=mountHomePhotoMotion(main);
+     }).catch(()=>{});
+   }
+   startPhotoMotion();
+   reduced.addEventListener('change',startPhotoMotion,{signal:motionEvents.signal});
+   timer=setTimeout(()=>{
+     reduced.addEventListener('change',syncSmoke,{signal:motionEvents.signal});
+     document.addEventListener('visibilitychange',syncSmoke,{signal:motionEvents.signal});
+     syncSmoke();
+   },500);
+ });
+ heroMotionCleanup=()=>{
+   clearTimeout(timer);
+   motionEvents.abort();
+   stopPhoto?.();
+   video?.pause();
+   video?.remove();
+ };
 }
 
 async function eventsPage(seq){
  const params=new URLSearchParams(location.search);
+ display(`<section class="training-intro">
+   ${intro(t('Znajdź swój trening.'),t('Wybierz dyscyplinę, sprawdź datę i zaplanuj kolejny krok.'))}
+   <img src="/assets/campaign/treningi-720.webp"
+     srcset="/assets/campaign/treningi-360.webp 360w, /assets/campaign/treningi-720.webp 720w, /assets/campaign/treningi-1100.webp 1100w"
+     sizes="(max-width: 780px) calc(100vw - 44px), 46vw" width="1456" height="816"
+     alt="${t('Zdjęcie kampanijne przedstawiające grupę na strzelnicy')}" fetchpriority="high" decoding="async">
+ </section><section class="content" data-training-schedule></section>`,t('Treningi'));
  const [local,remote,{sampleCalendarEvents,eventDateKey}]=await Promise.all([
   api('/events'),getBookingSchedule(),import('./calendar.js?v=20261107-import'),
  ]);
@@ -143,7 +201,9 @@ async function eventsPage(seq){
  const events=(sample?sampleCalendarEvents():published).filter(event=>
    (!type||event.type===type)&&(!day||(event.day||eventDateKey(event.startsAt))===day));
  const types=`<div class="filter-tabs training-types" aria-label="${t('Rodzaje treningów')}"><button type="button" data-training-type="" aria-pressed="${!type}">${t('Wszystkie')}</button>${Object.entries(options).map(([value,label])=>`<button type="button" data-training-type="${value}" aria-pressed="${type===value}">${trainingTypeIcon(value)} ${esc(label)}</button>`).join('')}</div>`;
- display(`${intro(t('Znajdź swój trening.'),t('Wybierz dyscyplinę, sprawdź datę i zaplanuj kolejny krok.'))}<section class="content">${scheduleNotice(remote.state)}${types}<div class="filters">${finder(type,day,options)}</div>${sample?`<p class="notice training-sample-notice"><strong>${t('Przykładowe treningi.')}</strong> ${t('Zobacz, jak działa plan treningów. Te terminy są ilustracyjne; zapisy nie są aktywne.')}</p>`:session.demoMode?`<p class="notice">${t('Terminy, lokalizacje i ceny są przykładowe. Rezerwacje demonstracyjne nie są zgłoszeniem do rzeczywistego klubu.')}</p>`:''}<div class="events-list">${events.length?events.map(event=>sample?sampleEventRow(event,eventDateKey(event.startsAt)):scheduleRow(event)).join(''):empty(t('Brak terminów dla tego wyboru'),t('Zmień dyscyplinę lub datę, aby zobaczyć inne terminy.'))}</div></section>`,t('Treningi'));
+ const schedule=main.querySelector('[data-training-schedule]');
+ schedule.innerHTML=`${scheduleNotice(remote.state)}${types}<div class="filters">${finder(type,day,options)}</div>${sample?`<p class="notice training-sample-notice"><strong>${t('Przykładowe treningi.')}</strong> ${t('Zobacz, jak działa plan treningów. Te terminy są ilustracyjne; zapisy nie są aktywne.')}</p>`:session.demoMode?`<p class="notice">${t('Terminy, lokalizacje i ceny są przykładowe. Rezerwacje demonstracyjne nie są zgłoszeniem do rzeczywistego klubu.')}</p>`:''}<div class="events-list">${events.length?events.map(event=>sample?sampleEventRow(event,eventDateKey(event.startsAt)):scheduleRow(event)).join(''):empty(t('Brak terminów dla tego wyboru'),t('Zmień dyscyplinę lub datę, aby zobaczyć inne terminy.'))}</div>`;
+ localizeLinks(schedule);
  wireFinder();if(!sample)wireAdds();
  main.querySelectorAll('[data-training-type]').forEach(button=>button.addEventListener('click',()=>{
   const next=new URLSearchParams(location.search);

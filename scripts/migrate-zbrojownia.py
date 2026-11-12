@@ -312,6 +312,23 @@ def save(path, value):
     path.write_text(json.dumps(value,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
 
 
+def save_catalogue(products):
+    catalogue = []
+    for product in products:
+        card = {key: product[key] for key in ('path', 'title', 'price', 'image') if key in product}
+        cover = card.get('image')
+        if cover and cover.endswith('.webp'):
+            original = ASSETS / Path(cover).name
+            with Image.open(original) as image:
+                if image.width > 640:
+                    preview = original.with_name(original.stem + '-640.webp')
+                    image.thumbnail((640, image.height), Image.Resampling.LANCZOS)
+                    image.save(preview, 'WEBP', quality=78, method=6)
+                    card['thumbnail'] = '/assets/zbrojownia/' + preview.name
+        catalogue.append(card)
+    save(DATA / 'catalogue.json', catalogue)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build-only',action='store_true',help='Use the saved sitemap and HTML')
@@ -400,6 +417,7 @@ def main():
             detail.setdefault(bundle,{})[item['slug']]={**item,'body':body,'images':photos}
     index['events'].sort(key=lambda row:row['startsAt'] or '',reverse=True)
     save(DATA/'index.json',{**index,'aliases':aliases})
+    save_catalogue(index['products'])
     today = datetime.now(WARSAW).date().isoformat()
     schedule = [item for item in reversed(index['events']) if item['listed'] and item['day'] >= today]
     save(DATA/'schedule.json',schedule)

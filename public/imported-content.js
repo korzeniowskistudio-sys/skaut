@@ -17,7 +17,7 @@ const calendarProduct = {
 
 function read(name) {
   if (!requests.has(name)) {
-    const request = fetch(root+name+'.json?v='+version).then(response => {
+    const request = fetch(root+name+'.json?v='+(name==='catalogue'?'20261113-performance':version)).then(response => {
       if (!response.ok) throw new Error('Imported content unavailable');
       return response.json();
     }).catch(error => {
@@ -47,8 +47,9 @@ function languageNote() {
 }
 
 function productCard(product, heading) {
+  const cover = product.thumbnail || product.image;
   return '<article class="news-item imported-product"><a href="'+esc(sitePath(product.path))+'">'+
-    (product.image?'<img src="'+esc(product.image)+'" alt="" loading="lazy" decoding="async" width="600" height="400">':'')+
+    (cover?'<img src="'+esc(cover)+'" alt="" loading="lazy" decoding="async" width="600" height="400">':'')+
     '<'+heading+' lang="'+esc(product.lang||'pl')+'">'+esc(product.title)+'</'+heading+'>'+
     (Number.isInteger(product.price)?'<p>'+esc(money(product.price))+'</p>':'')+
     '<span class="text-link">'+label('Zobacz produkt')+' '+icon('arrow-up-right')+'</span></a></article>';
@@ -60,7 +61,7 @@ function productGrid(products, heading = 'h2') {
 }
 
 export async function importedGadgetsGrid() {
-  const {products}=await read('index');
+  const products=await read('catalogue').catch(async()=> (await read('index')).products);
   return productGrid([calendarProduct,...products],'h3');
 }
 

@@ -1,5 +1,7 @@
 """Check migrated public pages and verify that the booking path stays on SKAUT."""
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from playwright.sync_api import sync_playwright, expect
 
 origin=os.environ.get('SKAUT_ORIGIN','http://127.0.0.1:4176')
@@ -14,7 +16,8 @@ with sync_playwright() as p:
         schedule=page.request.get(origin+'/zbrojownia/schedule.json').json()
         index=page.request.get(origin+'/zbrojownia/index.json').json()
         assert len(index['events'])>=480 and len(index['products'])==16 and len(index['pages'])==6
-        event=next(e for e in schedule if e['type']=='karabin')
+        today=datetime.now(ZoneInfo('Europe/Warsaw')).date().isoformat()
+        event=next(e for e in schedule if e['type']=='karabin' and e['day']>=today)
         training='/en/training' if english else '/treningi'
         calendar='/en/calendar' if english else '/kalendarz'
         detail=event['path'].replace('/wydarzenia/','/en/events/',1) if english else event['path']

@@ -1,5 +1,6 @@
 // English interface copy. Source text is also the Polish fallback.
 export const englishText = {
+  "Zdjęcie kampanijne przedstawiające grupę na strzelnicy": "Campaign photograph of a group at a shooting range",
   "Kontakt": "Contact",
   "Prezes": "President",
   "Skarbnik": "Treasurer",

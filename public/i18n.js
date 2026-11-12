@@ -1,5 +1,3 @@
-import {englishText, englishNews} from './english.js?v=20261110-footer-contact';
-
 const polishToEnglish = new Map([
   ['/klub','/club'], ['/treningi','/training'], ['/kalendarz','/calendar'],
   ['/aktualnosci','/news'], ['/galeria','/gallery'], ['/gadzety','/gadgets'],
@@ -11,6 +9,7 @@ const englishPrefix = /^\/en(?:\/|$)/;
 
 export const english = englishPrefix.test(globalThis.location?.pathname || '');
 export const locale = english ? 'en-GB' : 'pl-PL';
+const {englishText, englishNews} = english ? await import('./english.js?v=20261113-performance') : {};
 
 export function t(source) {
   return english && Object.hasOwn(englishText,source) ? englishText[source] : source;
