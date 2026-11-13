@@ -436,6 +436,8 @@ export const englishText = {
   "Torba na szpej": "Range gear bag",
   "Torba na trening z przestawnymi przegrodami, osobną kieszenią na mokrą odzież i dużymi uchwytami zamków. Na froncie logo klubu i haft „torba na szpej”.": "A range bag with movable dividers, a separate pocket for wet clothes and oversized zip pulls. The club logo and “torba na szpej” are embroidered on the front.",
   "Trafienia: {0} / {1}. Wynik: {2} pkt.": "Hits: {0} / {1}. Score: {2} points.",
+  "Marnujesz sporo amunicji.": "You are wasting a lot of ammunition.",
+  "Dobra celność! Dobrze wykorzystujesz amunicję.": "Nice shooting! You’re making your ammunition count.",
   "Trening": "Training",
   "Trening karabinowy": "Rifle training",
   "Trening pistoletowy": "Pistol training",

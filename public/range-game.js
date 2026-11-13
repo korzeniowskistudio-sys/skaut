@@ -1,5 +1,5 @@
-import {t, tr} from './i18n.js?v=20261110-bonus-crest';
-import {createRangeAudio} from './range-audio.js?v=20261107-range-audio';
+import {t, tr} from './i18n.js?v=20261113-range-accuracy';
+import {createRangeAudio} from './range-audio.js?v=20261113-range-shots';
 import {STAGES,STAGE_SECONDS,STAGE_NOTICE_SECONDS,TARGET_RINGS,BONUS_POINTS,CLOCK_SECONDS,SHOT_INTERVAL,
   clamp,targetPose,createRandom,createStage,advanceTargets,takeShot} from './range-engine.js?v=20261108-range-leaderboard';
 import {rangeLeaderboardMarkup,mountRangeLeaderboard} from './range-leaderboard.js?v=20261108-range-banner';
@@ -297,9 +297,14 @@ export function mountRangeGame(root, request) {
     title.textContent = 'GAME OVER';
     const result = tr`Trafienia: ${hits} / ${shots}. Wynik: ${score} pkt.`;
     const next = STAGES[stage];
-    message.textContent = next
+    const summary = next
       ? tr`${result} Etap ${stage + 1} odblokujesz po zdobyciu ${next.points} pkt.`
       : result;
+    const accuracy = shots ? hits / shots : null;
+    let comment = '';
+    if (accuracy !== null && accuracy < .30) comment = t('Marnujesz sporo amunicji.');
+    if (accuracy > .50) comment = t('Dobra celność! Dobrze wykorzystujesz amunicję.');
+    message.textContent = comment ? `${summary} ${comment}` : summary;
     play.textContent = t('Zagraj ponownie');
     updateReadouts();
     paint();

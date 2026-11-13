@@ -1,7 +1,8 @@
-// Original tracker-style score. All instruments and effects are synthesized locally.
+// Original tracker-style score and cues, with two sampled shot variations.
 const RATE = 22050;
 const TAU = Math.PI * 2;
 const SOUND_KEY = 'skaut-range-sound';
+const SHOT_URLS = ['/assets/range-game/shot-muffled.mp3', '/assets/range-game/shot-crisp.mp3'];
 const frequency = note => 440 * 2 ** ((note - 69) / 12);
 const quantize = value => Math.round(value * 127) / 127;
 
@@ -133,6 +134,7 @@ export function createRangeAudio() {
   try { enabled = localStorage.getItem(SOUND_KEY) !== 'off'; } catch {}
   let active = false;
   let context, master, music, effects, loop, loopVolume, startedAt;
+  let shots, lastShot = -1;
   let offset = 0;
 
   function prepare() {
@@ -143,6 +145,14 @@ export function createRangeAudio() {
     master.connect(context.destination);
     music = renderMusic(context);
     effects = renderEffects(context);
+    shots = [effects.shot];
+    const audio = context;
+    for (const url of SHOT_URLS) {
+      fetch(url).then(response => response.ok ? response.arrayBuffer() : null)
+        .then(data => data && audio.decodeAudioData(data))
+        .then(buffer => { if (buffer && context === audio) shots.push(buffer); })
+        .catch(() => {});
+    }
     return context;
   }
 
@@ -215,7 +225,8 @@ export function createRangeAudio() {
     play(name) {
       if (!enabled || !effects?.[name] || context.state !== 'running' || document.hidden) return;
       const source = context.createBufferSource();
-      source.buffer = effects[name];
+      if (name === 'shot') lastShot = (lastShot + 1) % shots.length;
+      source.buffer = name === 'shot' ? shots[lastShot] : effects[name];
       source.connect(master);
       effectsPlaying.add(source);
       source.onended = () => {

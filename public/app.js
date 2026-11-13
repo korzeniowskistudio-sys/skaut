@@ -20,7 +20,7 @@ function savedIds(key) {
 let basket = savedIds('skaut-basket');
 let gadgetBasket = [...new Set(savedIds('skaut-gadget-basket'))];
 const loadGadgets = () => import('./gadgets.js?v=20261110-mobile');
-const loadRangeGame = () => import('./range-game.js?v=20261110-bonus-crest').catch(() => null);
+const loadRangeGame = () => import('./range-game.js?v=20261113-range-shots').catch(() => null);
 let checkoutKey;try{checkoutKey=localStorage.getItem('skaut-checkout-key');}catch{}
 const icon=n=>`<i class="ph ph-${n}" aria-hidden="true"></i>`;
 function toast(message){const el=document.querySelector('#toast');el.textContent=message;el.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.hidden=true,5000);}
