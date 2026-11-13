@@ -9,7 +9,7 @@ const englishPrefix = /^\/en(?:\/|$)/;
 
 export const english = englishPrefix.test(globalThis.location?.pathname || '');
 export const locale = english ? 'en-GB' : 'pl-PL';
-const {englishText, englishNews} = english ? await import('./english.js?v=20261113-performance') : {};
+const {englishText, englishNews} = english ? await import('./english.js?v=20261113-ui-sound') : {};
 
 export function t(source) {
   return english && Object.hasOwn(englishText,source) ? englishText[source] : source;

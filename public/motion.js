@@ -1,4 +1,4 @@
-import {t} from './i18n.js?v=20261107-english';
+import {t} from './i18n.js?v=20261113-ui-sound';
 const ARRIVE = 'cubic-bezier(.16,1,.3,1)';
 const DEPART = 'cubic-bezier(.55,0,1,.45)';
 const SOUND_KEY = 'skaut-transition-sound';
@@ -98,7 +98,6 @@ export function createPageMotion({ main }) {
   function enter() {
     if (disposed) return;
     cancel();
-    sound.play('enter');
     if (reduced.matches || main.ownerDocument.querySelector('dialog[open]')) return;
     const elements = candidates();
     elements.forEach((element, index) => enterLayer(element, index));
@@ -110,7 +109,6 @@ export function createPageMotion({ main }) {
     // Rapid requests share one departure instead of queuing 160ms waits.
     if (leaving) return leaving;
     cancel();
-    sound.play('leave');
     if (reduced.matches || main.ownerDocument.querySelector('dialog[open]')) return Promise.resolve();
     const token = generation;
     const outgoing = candidates().map(element => animate(element, [
@@ -139,7 +137,7 @@ export function createPageMotion({ main }) {
   reduced.addEventListener('change', preferenceChanged);
   window.addEventListener('pageshow', pageRestored);
   return {
-    leave, enter, play: sound.play,
+    leave, enter,
     dispose() {
       disposed = true;
       cancel();
@@ -155,7 +153,7 @@ function createMechanicalSound(doc) {
   const listeners = new AbortController();
   const mobile = window.matchMedia('(max-width: 780px), (pointer: coarse) and (max-width: 1100px) and (max-height: 600px)');
   const sources = new Set();
-  let enabled = false, context, master, noise, disposed = false, lastPlayed = -Infinity;
+  let enabled = false, context, master, noise, disposed = false, lastPlayed = -Infinity, lastCue = -1;
   try { enabled = supported && localStorage.getItem(SOUND_KEY) === 'on'; } catch {}
   const button = doc.createElement('button');
   button.type = 'button';
@@ -163,7 +161,7 @@ function createMechanicalSound(doc) {
   button.innerHTML = '<i class="ph ph-speaker-simple-slash" aria-hidden="true"></i>';
   button.disabled = !supported;
   function update() {
-    const label = !supported ? t('Dźwięk przejść jest niedostępny') : enabled ? t('Wyłącz dźwięk przejść') : t('Włącz dźwięk przejść');
+    const label = !supported ? t('Dźwięk interfejsu jest niedostępny') : enabled ? t('Wyłącz dźwięk interfejsu') : t('Włącz dźwięk interfejsu');
     button.setAttribute('aria-label', label);
     button.setAttribute('title', label);
     button.setAttribute('aria-pressed', String(enabled));
@@ -179,7 +177,7 @@ function createMechanicalSound(doc) {
   place(); update();
   mobile.addEventListener('change', place);
 
-  function unlock(event) {
+  function playFromGesture(event) {
     if (!enabled || !event.isTrusted || disposed || !supported) return;
     try {
       if (!context) {
@@ -191,32 +189,34 @@ function createMechanicalSound(doc) {
         const data = noise.getChannelData(0);
         for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
       }
-      if (context.state === 'suspended') context.resume().catch(() => {});
-    } catch { /* Audio failure never blocks navigation. */ }
+      if (context.state === 'running') play();
+      else context.resume().then(play).catch(() => {});
+    } catch { /* Audio failure never blocks the control. */ }
   }
-  doc.addEventListener('pointerdown', unlock, { signal: listeners.signal, passive: true });
-  doc.addEventListener('keydown', unlock, { signal: listeners.signal });
-
-  function track(source, end) {
+  function track(source, end, ...nodes) {
     sources.add(source);
-    source.onended = () => { sources.delete(source); source.disconnect(); };
+    source.onended = () => {
+      sources.delete(source);
+      source.disconnect();
+      for (const node of nodes) node.disconnect();
+    };
     source.stop(end);
   }
-  function slide(start, duration, level, reverse = false) {
+  function scrape(start, duration, level, from, to, attack = .009) {
     const source = context.createBufferSource();
     const filter = context.createBiquadFilter();
     const gain = context.createGain();
     source.buffer = noise;
     filter.type = 'bandpass';
     filter.Q.value = 1.3;
-    filter.frequency.setValueAtTime(reverse ? 2800 : 1100, start);
-    filter.frequency.exponentialRampToValueAtTime(reverse ? 1000 : 3200, start + duration);
+    filter.frequency.setValueAtTime(from, start);
+    filter.frequency.exponentialRampToValueAtTime(to, start + duration);
     gain.gain.setValueAtTime(.0001, start);
-    gain.gain.exponentialRampToValueAtTime(level, start + .012);
+    gain.gain.exponentialRampToValueAtTime(level, start + attack);
     gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
     source.connect(filter).connect(gain).connect(master);
     source.start(start);
-    track(source, start + duration + .01);
+    track(source, start + duration + .01, filter, gain);
   }
   function tick(start, frequency, duration, level) {
     const oscillator = context.createOscillator();
@@ -229,28 +229,63 @@ function createMechanicalSound(doc) {
     gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
     oscillator.connect(gain).connect(master);
     oscillator.start(start);
-    track(oscillator, start + duration + .01);
+    track(oscillator, start + duration + .01, gain);
   }
-  function play(kind = 'enter') {
+
+  // Short foley patterns. The time offsets keep the parts of each cue distinct.
+  const cues = [
+    now => { // Reload: a latch, a metal slide and a return click.
+      tick(now, 1950, .022, .14);
+      scrape(now + .012, .084, .17, 900, 2900);
+      tick(now + .094, 1120, .043, .15);
+    },
+    now => { // Muffled report: a soft thump with a short, dry tail.
+      scrape(now, .098, .31, 520, 145, .003);
+      tick(now, 173, .054, .13);
+      scrape(now + .014, .046, .055, 1500, 550, .003);
+    },
+    now => { // Brass casing on a hard floor: three diminishing bounces.
+      tick(now, 3200, .041, .16);
+      tick(now + .052, 2660, .036, .09);
+      tick(now + .089, 2270, .039, .046);
+    },
+    now => { // Cartridge loading: light brass against a spring and a soft click.
+      scrape(now, .046, .095, 2400, 1450);
+      tick(now + .027, 3500, .028, .11);
+      tick(now + .061, 1250, .037, .14);
+    },
+    now => { // Magazine seating: a lower impact followed by a locking snap.
+      scrape(now, .047, .23, 850, 310, .003);
+      tick(now, 420, .039, .14);
+      tick(now + .042, 2050, .034, .18);
+    },
+    now => { // Mechanical latch: a small double click and spring release.
+      tick(now, 2860, .019, .13);
+      tick(now + .026, 1660, .023, .13);
+      scrape(now + .031, .057, .11, 3100, 1800);
+    },
+  ];
+
+  function play() {
     if (!enabled || !context || context.state !== 'running' || doc.hidden || disposed) return;
     const now = context.currentTime;
-    if (now - lastPlayed < .11) return;
+    if (now - lastPlayed < .085) return;
     lastPlayed = now;
     try {
-      // Original filtered noise and resonators: sliding metal, latch and spring.
-      // Deliberately no ballistic transient, explosive bass or recorded samples.
-      if (kind === 'leave') {
-        tick(now, 1950, .023, .17);
-        slide(now + .009, .105, .18, false);
-        tick(now + .079, 1170, .04, .10);
-      } else {
-        slide(now, .075, .11, true);
-        tick(now + .045, 2400, .025, .18);
-        tick(now + .069, 1350, .055, .11);
-        tick(now + .096, 820, .07, .035);
-      }
-    } catch { /* The visible transition is independent of audio. */ }
+      let choice = Math.floor(Math.random() * (cues.length - (lastCue < 0 ? 0 : 1)));
+      if (lastCue >= 0 && choice >= lastCue) choice++;
+      lastCue = choice;
+      cues[choice](now);
+    } catch { /* Audio failure never blocks the control. */ }
   }
+
+  doc.addEventListener('click', event => {
+    if (!enabled) return;
+    const control = event.target.closest?.('button, a[href], input[type=button], input[type=submit], input[type=reset], summary, [role=button]');
+    if (!control || control.matches(':disabled') || control.closest('[aria-disabled=true], [inert], .sound-toggle, [data-range-game]')) return;
+    playFromGesture(event);
+  }, { capture: true, signal: listeners.signal });
+
   button.addEventListener('click', event => {
     enabled = !enabled;
     try { localStorage.setItem(SOUND_KEY, enabled ? 'on' : 'off'); } catch {}
@@ -259,12 +294,9 @@ function createMechanicalSound(doc) {
       for (const source of sources) { try { source.stop(); } catch {} }
       return;
     }
-    unlock(event);
-    // Resume is asynchronous on some browsers; only this opt-in gesture previews it.
-    context?.resume().then(() => play('enter')).catch(() => {});
+    playFromGesture(event);
   }, { signal: listeners.signal });
   return {
-    play,
     dispose() {
       disposed = true;
       listeners.abort();

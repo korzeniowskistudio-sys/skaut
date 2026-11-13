@@ -9,11 +9,11 @@ with sync_playwright() as p:
  errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  page.add_init_script('''window.__audioContexts=[];const OriginalAudioContext=window.AudioContext;window.AudioContext=class extends OriginalAudioContext{constructor(...args){super(...args);window.__audioContexts.push(this);}};''')
  page.goto(origin+'/',wait_until='networkidle')
- button=page.get_by_role('button',name='Włącz dźwięk przejść',exact=True)
+ button=page.get_by_role('button',name='Włącz dźwięk interfejsu',exact=True)
  expect(button).to_have_attribute('aria-pressed','false')
  assert page.evaluate('window.__audioContexts.length')==0,'Audio started without opt-in'
  button.click()
- expect(page.get_by_role('button',name='Wyłącz dźwięk przejść',exact=True)).to_have_attribute('aria-pressed','true')
+ expect(page.get_by_role('button',name='Wyłącz dźwięk interfejsu',exact=True)).to_have_attribute('aria-pressed','true')
  assert page.evaluate('window.__audioContexts.length')==1
  assert page.evaluate('window.__audioContexts[0].state')=='running'
  page.get_by_role('navigation').get_by_role('link',name='Galeria',exact=True).click()
@@ -24,8 +24,8 @@ with sync_playwright() as p:
  expect(page.get_by_role('heading',name='Aktualności.',exact=True)).to_be_visible()
  assert page.url.endswith('/aktualnosci')
  assert page.locator('dialog[open]').count()==0
- page.get_by_role('button',name='Wyłącz dźwięk przejść',exact=True).click()
- expect(page.get_by_role('button',name='Włącz dźwięk przejść',exact=True)).to_have_attribute('aria-pressed','false')
+ page.get_by_role('button',name='Wyłącz dźwięk interfejsu',exact=True).click()
+ expect(page.get_by_role('button',name='Włącz dźwięk interfejsu',exact=True)).to_have_attribute('aria-pressed','false')
  for width in [320,390,800,1024,1440]:
   page.set_viewport_size({'width':width,'height':900})
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'Header/page overflow at {width}px'
