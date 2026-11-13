@@ -2,6 +2,17 @@ import {t} from './i18n.js?v=20261113-ui-sound';
 const ARRIVE = 'cubic-bezier(.16,1,.3,1)';
 const DEPART = 'cubic-bezier(.55,0,1,.45)';
 const SOUND_KEY = 'skaut-transition-sound';
+const FOLEY_URL = '/assets/ui-sound/foley.mp3';
+// Start and duration in seconds for each edit in the audio file.
+const FOLEY_CUES = [
+  [0, .58],       // Reload
+  [.68, .31],    // Muffled report
+  [1.09, .63],   // Brass casing
+  [1.82, .47],   // Cartridge loading
+  [2.39, .42],   // Magazine seating
+  [2.91, .53],   // Action cycle
+];
+
 
 /** A bounded navigation sequence. Content stays visible without JavaScript/CSS. */
 export function createPageMotion({ main }) {
@@ -152,8 +163,9 @@ function createMechanicalSound(doc) {
   const supported = Boolean(window.AudioContext || window.webkitAudioContext);
   const listeners = new AbortController();
   const mobile = window.matchMedia('(max-width: 780px), (pointer: coarse) and (max-width: 1100px) and (max-height: 600px)');
-  const sources = new Set();
-  let enabled = false, context, master, noise, disposed = false, lastPlayed = -Infinity, lastCue = -1;
+  let enabled = false, disposed = false;
+  let context, audioRequest, activeCue;
+  let lastPlayed = -Infinity, lastCue = -1, gesture = 0;
   try { enabled = supported && localStorage.getItem(SOUND_KEY) === 'on'; } catch {}
   const button = doc.createElement('button');
   button.type = 'button';
@@ -177,105 +189,59 @@ function createMechanicalSound(doc) {
   place(); update();
   mobile.addEventListener('change', place);
 
-  function playFromGesture(event) {
-    if (!enabled || !event.isTrusted || disposed || !supported) return;
-    try {
-      if (!context) {
-        context = new (window.AudioContext || window.webkitAudioContext)();
-        master = context.createGain();
-        master.gain.value = .16;
-        master.connect(context.destination);
-        noise = context.createBuffer(1, Math.ceil(context.sampleRate * .4), context.sampleRate);
-        const data = noise.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-      }
-      if (context.state === 'running') play();
-      else context.resume().then(play).catch(() => {});
-    } catch { /* Audio failure never blocks the control. */ }
-  }
-  function track(source, end, ...nodes) {
-    sources.add(source);
-    source.onended = () => {
-      sources.delete(source);
-      source.disconnect();
-      for (const node of nodes) node.disconnect();
-    };
-    source.stop(end);
-  }
-  function scrape(start, duration, level, from, to, attack = .009) {
-    const source = context.createBufferSource();
-    const filter = context.createBiquadFilter();
-    const gain = context.createGain();
-    source.buffer = noise;
-    filter.type = 'bandpass';
-    filter.Q.value = 1.3;
-    filter.frequency.setValueAtTime(from, start);
-    filter.frequency.exponentialRampToValueAtTime(to, start + duration);
-    gain.gain.setValueAtTime(.0001, start);
-    gain.gain.exponentialRampToValueAtTime(level, start + attack);
-    gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
-    source.connect(filter).connect(gain).connect(master);
-    source.start(start);
-    track(source, start + duration + .01, filter, gain);
-  }
-  function tick(start, frequency, duration, level) {
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(frequency, start);
-    oscillator.frequency.exponentialRampToValueAtTime(frequency * .56, start + duration);
-    gain.gain.setValueAtTime(.0001, start);
-    gain.gain.exponentialRampToValueAtTime(level, start + .002);
-    gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
-    oscillator.connect(gain).connect(master);
-    oscillator.start(start);
-    track(oscillator, start + duration + .01, gain);
+  function stopCue() {
+    if (!activeCue) return;
+    const {source, gain} = activeCue;
+    const now = context.currentTime;
+    gain.gain.setValueAtTime(gain.gain.value, now);
+    gain.gain.linearRampToValueAtTime(0, now + .018);
+    source.stop(now + .018);
+    activeCue = null;
   }
 
-  // Short foley patterns. The time offsets keep the parts of each cue distinct.
-  const cues = [
-    now => { // Reload: a latch, a metal slide and a return click.
-      tick(now, 1950, .022, .14);
-      scrape(now + .012, .084, .17, 900, 2900);
-      tick(now + .094, 1120, .043, .15);
-    },
-    now => { // Muffled report: a soft thump with a short, dry tail.
-      scrape(now, .098, .31, 520, 145, .003);
-      tick(now, 173, .054, .13);
-      scrape(now + .014, .046, .055, 1500, 550, .003);
-    },
-    now => { // Brass casing on a hard floor: three diminishing bounces.
-      tick(now, 3200, .041, .16);
-      tick(now + .052, 2660, .036, .09);
-      tick(now + .089, 2270, .039, .046);
-    },
-    now => { // Cartridge loading: light brass against a spring and a soft click.
-      scrape(now, .046, .095, 2400, 1450);
-      tick(now + .027, 3500, .028, .11);
-      tick(now + .061, 1250, .037, .14);
-    },
-    now => { // Magazine seating: a lower impact followed by a locking snap.
-      scrape(now, .047, .23, 850, 310, .003);
-      tick(now, 420, .039, .14);
-      tick(now + .042, 2050, .034, .18);
-    },
-    now => { // Mechanical latch: a small double click and spring release.
-      tick(now, 2860, .019, .13);
-      tick(now + .026, 1660, .023, .13);
-      scrape(now + .031, .057, .11, 3100, 1800);
-    },
-  ];
+  function loadAudio() {
+    audioRequest ??= fetch(FOLEY_URL).then(response => {
+      if (!response.ok) throw new Error('Foley audio unavailable');
+      return response.arrayBuffer();
+    }).then(data => context.decodeAudioData(data)).catch(error => {
+      audioRequest = null;
+      throw error;
+    });
+    return audioRequest;
+  }
 
-  function play() {
-    if (!enabled || !context || context.state !== 'running' || doc.hidden || disposed) return;
+  function play(audio) {
     const now = context.currentTime;
     if (now - lastPlayed < .085) return;
     lastPlayed = now;
+    stopCue();
+    let choice = Math.floor(Math.random() * (lastCue < 0 ? FOLEY_CUES.length : FOLEY_CUES.length - 1));
+    if (lastCue >= 0 && choice >= lastCue) choice++;
+    lastCue = choice;
+    const [start, duration] = FOLEY_CUES[choice];
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    gain.gain.value = .28;
+    source.buffer = audio;
+    source.connect(gain).connect(context.destination);
+    activeCue = {source, gain};
+    source.onended = () => {
+      if (activeCue?.source === source) activeCue = null;
+      source.disconnect();
+      gain.disconnect();
+    };
+    source.start(now, start, duration);
+  }
+
+  function playFromGesture(event) {
+    if (!enabled || !event.isTrusted || disposed || !supported) return;
+    const click = ++gesture;
     try {
-      let choice = Math.floor(Math.random() * (cues.length - (lastCue < 0 ? 0 : 1)));
-      if (lastCue >= 0 && choice >= lastCue) choice++;
-      lastCue = choice;
-      cues[choice](now);
+      context ??= new (window.AudioContext || window.webkitAudioContext)();
+      const resumed = context.state === 'running' ? Promise.resolve() : context.resume();
+      Promise.all([resumed, loadAudio()]).then(([,audio]) => {
+        if (enabled && !disposed && !doc.hidden && gesture === click) play(audio);
+      }).catch(() => {});
     } catch { /* Audio failure never blocks the control. */ }
   }
 
@@ -291,7 +257,8 @@ function createMechanicalSound(doc) {
     try { localStorage.setItem(SOUND_KEY, enabled ? 'on' : 'off'); } catch {}
     update();
     if (!enabled) {
-      for (const source of sources) { try { source.stop(); } catch {} }
+      gesture++;
+      stopCue();
       return;
     }
     playFromGesture(event);
@@ -302,8 +269,7 @@ function createMechanicalSound(doc) {
       listeners.abort();
       mobile.removeEventListener('change', place);
       button.remove();
-      for (const source of sources) { try { source.stop(); } catch {} }
-      sources.clear();
+      stopCue();
       context?.close().catch(() => {});
     }
   };

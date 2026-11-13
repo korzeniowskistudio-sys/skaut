@@ -1,5 +1,5 @@
 import {t, tr, english, initLanguage, updateLanguageSwitch, localizeLinks, localPath, sitePath, localizedPost} from './i18n.js?v=20261113-performance';
-import {createPageMotion} from './motion.js?v=20261113-ui-sound';
+import {createPageMotion} from './motion.js?v=20261113-cinematic-foley';
 import {initNavigation} from './navigation.js?v=20261107-english';
 import {initMobileNavigation} from './mobile.js?v=20261110-gadgets';
 import {esc,money,date,time,kinds,statuses,field,empty,intro,finder,eventRow,newsItem,achievements,booking,campaignImageAttrs,campaignNewsImage,trainingTypeIcon,sampleEventRow,scheduleKinds,scheduleNotice,importedEventRow,clubCalendar,clubCalendarArtwork} from './ui.js?v=20261108-calendar-news';

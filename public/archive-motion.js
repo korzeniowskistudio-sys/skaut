@@ -1,5 +1,5 @@
 import {initNavigation} from './navigation.js?v=20261107-albums-calendar';
-import {createPageMotion} from './motion.js?v=20261113-ui-sound';
+import {createPageMotion} from './motion.js?v=20261113-cinematic-foley';
 import {initMobileNavigation} from './mobile.js?v=20261107responsive';
 const topNavigation=initNavigation();
 const pageMotion=createPageMotion({main:document.querySelector('main')});
